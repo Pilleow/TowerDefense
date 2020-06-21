@@ -1,5 +1,5 @@
 ## game.py
-This is the main game file.
+This is the main game file. If you'd want to convert this game to .exe, you would convert this file.
 
 ## editor.py
 This is the **level editor** for creating game levels.
