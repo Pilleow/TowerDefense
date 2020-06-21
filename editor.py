@@ -47,7 +47,7 @@ class Editor():
             self.draw()
 
     def modifyPath(self, pos):
-        path_pos = (math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50)
+        path_pos = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
         if path_pos not in self.path:
             self.path.append(path_pos)
         elif path_pos in self.path:
@@ -76,13 +76,51 @@ class Editor():
         pygame.display.update()
 
     def savePath(self):
+        # centering the path
+        x_min = self.path[0][0]
+        x_max = x_min
+        y_min = self.path[0][0]
+        y_max = y_min
+
+        for square in self.path:
+            if square[0] < x_min:
+                x_min = square[0]
+            elif square[0] > x_max:
+                x_max = square[0]
+
+            if square[1] < y_min:
+                y_min = square[1]
+            elif square[1] > y_max:
+                y_max = square[1]
+
+        x_center = (x_max+x_min)//2
+        y_center = (y_max+y_min)//2
+        x_offset = self.resolution[0]//2 - x_center
+        y_offset = self.resolution[1]//2 - y_center
+
+        print(x_offset)
+        print(y_offset)
+
+        if x_offset % 2:
+            x_offset -= 25
+        if y_offset % 2:
+            y_offset += 25
+
+        for square in self.path:
+            square[0] += x_offset
+            square[1] += y_offset
+
+        print(x_offset)
+        print(y_offset)
+
+        # saving path
         with open("data/levels.json") as f:
             levels = json.load(f)
 
         levels.append(self.path)
         self.path_saved = True
         self.path_saved_text_timeout = 300
-        self.path = []
+        #self.path = []
 
         with open("data/levels.json", "w") as f:
             json.dump(levels, f)

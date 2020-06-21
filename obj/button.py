@@ -1,6 +1,7 @@
 import pygame
 pygame.init()
 
+
 class Button:
     def __init__(self, color, pos_res, text, text_color, font, antialias=True):
         self.x = pos_res[0]
