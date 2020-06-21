@@ -7,10 +7,10 @@ text_font = pygame.font.SysFont('Consolas', 50)
 
 class Editor():
     def __init__(self):
-        self.resolution = (1200,720)
+        self.resolution = (1000,700)
         self.Screen = pygame.display.set_mode(self.resolution)
         self.clock = pygame.time.Clock()
-        self.buttons = [Button([50,200,50], (self.resolution[0]//1.3, self.resolution[1]//1.2, 200, 50), "Save", [0,0,0], 30)] # color, pos_res, text, text_color, font, antialias=True
+        self.buttons = [Button([50,200,50], (self.resolution[0]//1.4, self.resolution[1]//1.2, 200, 60), "Save", [0,0,0], 40)] # color, pos_res, text, text_color, font, antialias=True
         self.path_saved_text = text_font.render("Level saved to data/levels.json", True, (255,255,255))
         self.path_saved_text_center = self.path_saved_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//15))
         self.path_saved_text_timeout = 0
