@@ -1,6 +1,3 @@
-# Tower Defense Game
-This is a generic tower defense, everyone knows how these look like.
-
 ## game.py
 This is the main game file.
 
