@@ -63,7 +63,6 @@ class Game:
 
         while run:
             self.clock.tick(FPS)
-            print(self.clock.get_fps())
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -82,7 +81,7 @@ class Game:
 
                         if self.wave != len(self.waves)-1:
                             self.wave += 1
-                            self.enemy_send_timer = 1
+                            self.enemy_send_timer = 300
                             self.enemy_send_index = 0
                             self.enemy_type_index = 0
                         else:
@@ -142,3 +141,4 @@ g = Game()
 g.run()
 
 pygame.quit()
+

@@ -3,6 +3,10 @@ import pygame
 import math
 import json
 
+pygame.mixer.pre_init(44100, -16, 2, 512)
+pygame.mixer.init()
+pygame.init()
+
 text_font = pygame.font.SysFont('Consolas', 50)
 
 class Editor():
