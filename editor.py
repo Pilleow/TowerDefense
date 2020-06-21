@@ -60,8 +60,8 @@ class Editor():
 
         for p in self.path:
             if self.path.index(p) == 0:
-                pygame.draw.rect(self.Screen, (100,200,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (150,250,150), (p[0]+5, p[1]+5, 40, 40))
+                pygame.draw.rect(self.Screen, (200,100,100), (p[0], p[1], 50, 50))
+                pygame.draw.rect(self.Screen, (250,150,150), (p[0]+5, p[1]+5, 40, 40))
             else:
                 pygame.draw.rect(self.Screen, (100,100,100), (p[0], p[1], 50, 50))
                 pygame.draw.rect(self.Screen, (150,150,150), (p[0]+5, p[1]+5, 40, 40))
