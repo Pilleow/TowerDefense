@@ -15,7 +15,7 @@ class Game:
         self.tiles = []
         self.projectiles = []
         self.enemies = []
-        self.turrets = []
+        self.turrets = [Kinetic_1([450, 350]), Kinetic_2([450, 400]), Kinetic_3([550, 400])]
         self.health = 50
         self.money = 250
         self.level = 0

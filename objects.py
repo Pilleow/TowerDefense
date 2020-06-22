@@ -26,4 +26,16 @@ class Square_2(Enemy):
 
 
 # Turrets --------------------------------------------------------------------------- #
+class Kinetic_1(Tower):
+    def __init__(self, pos):
+        super().__init__(pos, 5, 250, pygame.image.load("sprites/towers/head/kinetic_1.png"))
 
+
+class Kinetic_2(Tower):
+    def __init__(self, pos):
+        super().__init__(pos, 5, 250, pygame.image.load("sprites/towers/head/kinetic_2.png"))
+
+
+class Kinetic_3(Tower):
+    def __init__(self, pos):
+        super().__init__(pos, 5, 250, pygame.image.load("sprites/towers/head/kinetic_3.png"))
