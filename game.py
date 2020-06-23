@@ -22,7 +22,7 @@ class Game:
         self.turrets = []
         self.turret_pos = []
         self.available_turrets = [eval(f"Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
-        self.health = 50
+        self.health = 500
         self.money = 250
         self.level = 0
         self.wave = 0
@@ -39,9 +39,9 @@ class Game:
             self.waves = json.load(f)
 
         self.turret_cost_text = text_font_m.render("", True, (255,255,255))
-        self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 20))
+        self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 60))
         self.notif_text = text_font_s.render("", True, (255,100,100))
-        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
+        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 105))
         self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
         self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
 
@@ -73,13 +73,13 @@ class Game:
                                 continue
 
                             self.turret_cost_text = text_font_m.render(str(tr.cost)+" $", True, (255,255,255))
-                            self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 20))
+                            self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 60))
                             self.notif_text = text_font_s.render("", True, (255,100,100))
                             if self.money >= tr.cost:
                                 continue
 
                             self.notif_text = text_font_s.render("Not enough money!", True, (255,100,100))
-                            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
+                            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 105))
                             break
 
                 if event.type == pygame.MOUSEBUTTONDOWN: # activating buy/turret menu
@@ -89,29 +89,24 @@ class Game:
                         print('Open Tower Modification Menu (WIP)')
 
                     elif self.buy_menu_open:
-                        if selected_tile[0] >= self.buy_menu_pos[0] and selected_tile[0] <= self.buy_menu_pos[0] + 50*(self.buy_menu_width-1) and self.buy_menu_open:
-                            if selected_tile[1] >= self.buy_menu_pos[1] and selected_tile[1] <= self.buy_menu_pos[1]:
-
-                                for tr in self.available_turrets:
-                                    if tr.pos != selected_tile:
-                                        continue
-                                    if self.money >= tr.cost:
-                                        pos = [self.buy_menu_pos[0]-50, self.buy_menu_pos[1]]
-                                        self.turrets.append(eval(f"{tr.__class__.__name__}({pos}, True)"))
-                                        self.turret_pos.append(pos)
-                                        self.buy_menu_open = False
-                                        self.money -= tr.cost
-                                        self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-                                        self.turret_cost_text = text_font_m.render("", True, (255,255,255))
-                                    break
-                            else:
-                                self.turret_cost_text = text_font_m.render("", True, (255,255,255))
-                                self.notif_text = text_font_s.render("", True, (255,100,100))
-                                self.buy_menu_open = False
-                        else:
+                        if (selected_tile[0] < self.buy_menu_pos[0] or selected_tile[0] > self.buy_menu_pos[0] + 50*(self.buy_menu_width-1)) or (selected_tile[1] < self.buy_menu_pos[1] or selected_tile[1] > self.buy_menu_pos[1]):
                             self.turret_cost_text = text_font_m.render("", True, (255,255,255))
                             self.notif_text = text_font_s.render("", True, (255,100,100))
                             self.buy_menu_open = False
+
+                        else:
+                            for tr in self.available_turrets:
+                                if tr.pos != selected_tile:
+                                    continue
+                                if self.money >= tr.cost:
+                                    pos = [self.buy_menu_pos[0]-50, self.buy_menu_pos[1]]
+                                    self.turrets.append(eval(f"{tr.__class__.__name__}({pos}, True)"))
+                                    self.turret_pos.append(pos)
+                                    self.buy_menu_open = False
+                                    self.money -= tr.cost
+                                    self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
+                                    self.turret_cost_text = text_font_m.render("", True, (255,255,255))
+                                break
 
                     elif selected_tile in self.tiles:
                         self.buy_menu_open = True
@@ -147,40 +142,26 @@ class Game:
             for en in self.enemies:
                 x_value = en.x-25+en.x_offset
                 y_value = en.y-25+en.y_offset
-                x_distance = abs(x_value - self.levels[self.level][en.point][0])
-                y_distance = abs(y_value - self.levels[self.level][en.point][1])
 
                 if x_value > self.levels[self.level][en.point][0]:
-                    if x_distance >= en.v:
-                        en.x -= en.v
-                    else:
-                        en.x -= x_distance - en.v
+                    en.x -= en.v
                 elif x_value < self.levels[self.level][en.point][0]:
-                    if x_distance >= en.v:
-                        en.x += en.v
-                    else:
-                        en.x += x_distance - en.v
+                    en.x += en.v
                 elif y_value > self.levels[self.level][en.point][1]:
-                    if y_distance >= en.v:
-                        en.y -= en.v
-                    else:
-                        en.y -= y_distance - en.v
+                    en.y -= en.v
                 elif y_value < self.levels[self.level][en.point][1]:
-                    if y_distance >= en.v:
-                        en.y += en.v
-                    else:
-                        en.y += y_distance - en.v
+                    en.y += en.v
 
                 else:
-                    if en.point >= len(self.levels[self.level])-1:
+                    if en.point+1 < self.level_length:
+                        en.point += 1
+                    else:
                         self.health -= en.dmg
                         self.enemies.remove(en)
                         self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
                         if self.health <= 0:
                             print("Game Over - No lives left.")
                             run = False
-                    else:
-                        en.point += 1
 
             self.detectEnemy()
             self.draw()
@@ -190,6 +171,7 @@ class Game:
         Loads level from levels.json, autofills the surrounding area around path
         :returns: None
         """
+        self.level_length = len(self.levels[self.level])
         for square in self.levels[self.level]:
             for offset in [[0,50],[50,50],[50,0],[50,-50],[0,-50],[-50,-50],[-50,0],[-50,50]]:
 

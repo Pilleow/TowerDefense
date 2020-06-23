@@ -7,7 +7,7 @@ class Enemy:
         self.y_offset = sprite.get_rect().size[1]//2
         self.x = pos[0]+25-self.x_offset
         self.y = pos[1]+25-self.y_offset
-        self.v = v
+        self.v = 50/v
         self.health = health
         self.dmg = dmg
         self.sprite = sprite

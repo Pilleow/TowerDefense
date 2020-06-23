@@ -20,4 +20,4 @@ class Tower:
         display.blit(base_imgs[self.level], self.base_center)
         display.blit(self.sprite, (self.x, self.y))
         if self.range_ > 0:
-            pygame.draw.circle(display, (255,255,255), (self.pos[0]+25, self.pos[1]+25), self.range_, 3)
+            pygame.draw.circle(display, (200,255,200), (self.pos[0]+25, self.pos[1]+25), self.range_, 1)

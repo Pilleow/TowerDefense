@@ -18,22 +18,22 @@ turret_imgs = [pygame.image.load(f"sprites/towers/head/kinetic_{x}.png").convert
 # Enemies --------------------------------------------------------------------------- #
 class Circle_1(Enemy):
     def __init__(self, start):
-        super().__init__(start, 3, 5, 5, 10, enemy_imgs[0])
+        super().__init__(start, 25, 5, 5, 10, enemy_imgs[0])
 
 
 class Circle_2(Enemy):
     def __init__(self, start):
-        super().__init__(start, 4, 10, 6, 20, enemy_imgs[1])
+        super().__init__(start, 32, 10, 6, 20, enemy_imgs[1])
 
 
 class Square_1(Enemy):
     def __init__(self, start):
-        super().__init__(start, 4, 15, 7, 25, enemy_imgs[2])
+        super().__init__(start, 40, 15, 7, 25, enemy_imgs[2])
 
 
 class Square_2(Enemy):
     def __init__(self, start):
-        super().__init__(start, 2, 20, 10, 50, enemy_imgs[3])
+        super().__init__(start, 50, 20, 10, 50, enemy_imgs[3])
 
 
 # Turrets --------------------------------------------------------------------------- #
