@@ -108,7 +108,7 @@ class Editor():
         if x_offset % 2:
             x_offset -= 25
         if y_offset % 2:
-            y_offset += 25
+            y_offset -= 25
 
         for square in self.path:
             square[0] += x_offset
