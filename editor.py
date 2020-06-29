@@ -29,6 +29,7 @@ class Editor():
 
             if self.path_saved_text_timeout == 0:
                 self.path_saved = False
+                self.path = []
                 self.path_saved_text_timeout -= 1
 
             for event in pygame.event.get():
@@ -81,9 +82,10 @@ class Editor():
 
     def savePath(self):
         # centering the path
+        
         x_min = self.path[0][0]
         x_max = x_min
-        y_min = self.path[0][0]
+        y_min = self.path[0][1]
         y_max = y_min
 
         for square in self.path:
@@ -102,13 +104,10 @@ class Editor():
         x_offset = self.resolution[0]//2 - x_center
         y_offset = self.resolution[1]//2 - y_center
 
-        print(x_offset)
-        print(y_offset)
-
         if x_offset % 2:
             x_offset -= 25
         if y_offset % 2:
-            y_offset -= 25
+            y_offset += 25
 
         for square in self.path:
             square[0] += x_offset
