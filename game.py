@@ -4,65 +4,141 @@ import pygame
 import json
 import math
 
+pygame.init()
+pygame.mixer.quit()
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.mixer.init()
-pygame.init()
+
+pygame.display.set_icon(pygame.image.load("sprites/other/icon.gif"))
+pygame.display.set_caption("Tower Defence")
 
 text_font_l = pygame.font.SysFont('Consolas', 100)
 text_font_m = pygame.font.SysFont('Consolas', 50)
 text_font_s = pygame.font.SysFont('Consolas', 30)
 
-
 class Game:
     def __init__(self):
         self.resolution = (1000,700)
-        self.Screen = pygame.display.set_mode(self.resolution)
         self.clock = pygame.time.Clock()
+        self.Screen = pygame.display.set_mode(self.resolution)
         self.bg = pygame.image.load("sprites/other/background.png").convert()
-        self.backgrounds = [[self.bg, [self.resolution[0]*x, 0]] for x in range(3)]
+
         self.tiles = []
         self.enemies = []
         self.turrets = []
         self.turret_pos = []
-        self.available_turrets = [eval(f"Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
-        self.turret_menu_buttons = [ [x, [-50,-100], pygame.transform.scale(pygame.image.load(f"sprites/buttons/turretMenu/{x}.png"),(40,40))] for x in ['sell','upgrade'] ]
         self.buy_menu_pos = [-50,-100]
         self.turret_menu_pos = [-50,-100]
-        self.buy_menu_width = len(self.available_turrets)
+        self.backgrounds = [[self.bg, [self.resolution[0]*x, 0]] for x in range(3)]
+        self.available_turrets = [eval(f"Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
+        self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
+        self.intro_frames = [pygame.image.load(f"media/intro/frame_{index}.png").convert() for index in range(1,10)]
+        self.turret_menu_buttons = [ [x, [-50,-100], pygame.transform.scale(pygame.image.load(f"sprites/buttons/turretMenu/{x}.png"),(40,40))] for x in ['sell','upgrade'] ]
+
+        self.sfx = {
+            "menu_nav": pygame.mixer.Sound("media/sfx/menu_nav.wav")
+        }
+
+        self.FPS = 60
         self.turret_menu_width = len(self.turret_menu_buttons)
+        self.buy_menu_width = len(self.available_turrets)
+        self.enemy_send_timer = 300
+        self.enemy_send_index = 0
+        self.enemy_type_index = 0
+        self.intro_frame_count = 0
+        self.intro_timer = 30
         self.health = 50
         self.money = 300
         self.level = -1
         self.wave = 0
-        self.FPS = 60
-        self.enemy_send_timer = 300
-        self.enemy_send_index = 0
-        self.enemy_type_index = 0
-        self.run = True
-        self.buy_menu_open = False
+
         self.turret_menu_open = False
+        self.buy_menu_open = False
+        self.intro_playing = True
+        self.run = True
+
+        self.title_text = text_font_l.render("Tower Defence", True, (250,250,250))
+        self.turret_cost_text = text_font_m.render(" ", True, (255,255,255))
+        self.notif_text = text_font_s.render(" ", True, (255,100,100))
+        self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
+        self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
+
+        self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
+        self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 30))
+        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 70))
+
+        self.new_game_button = newGame((self.resolution[0]//3.5-175, self.resolution[1]//2, 350, 80))
 
         with open("data/levels.json") as f:
             self.levels = json.load(f)
         with open("data/waves.json") as f:
             self.waves = json.load(f)
 
-        self.title_text = text_font_l.render("Tower Defence", True, (250,250,250))
-        self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
-        self.turret_cost_text = text_font_m.render(" ", True, (255,255,255))
-        self.turret_cost_center = self.turret_cost_text.get_rect(center=(self.resolution[0]//2, 30))
-        self.notif_text = text_font_s.render(" ", True, (255,100,100))
-        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 70))
-        self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-        self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
+        for key in self.sfx:
+            self.sfx[key].set_volume(0.1)
 
-        self.new_game_button = newGame((self.resolution[0]//3.5-175, self.resolution[1]//2, 350, 80))
+    def playIntro(self):
+        """
+        Main loop, runs on game launch - shows intro, non-interactable
+        :returns: None
+        """
+        while self.intro_playing:
+            self.clock.tick(self.FPS)
+
+            # exit button
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.run = False
+                    self.intro_playing = False
+
+            # timer / countdown
+            if self.intro_timer > 0:
+                self.intro_timer -= 1
+                continue
+
+            # playing sfx
+            if self.intro_frame_count == 0:
+                self.intro_sfx[0].play()
+            elif self.intro_frame_count == 7:
+                self.intro_sfx[1].play()
+            elif self.intro_frame_count == 8:
+                self.intro_sfx[2].play()
+
+            # drawing
+            if self.intro_frame_count < 9:
+                self.Screen.blit(self.intro_frames[self.intro_frame_count], [0,0])
+                self.intro_frame_count += 1
+            else:
+                self.Screen.fill((0,0,0))
+                self.intro_frame_count += 1
+
+            # setting new timer / countdown
+            if self.intro_frame_count < 7:
+                self.intro_timer = 5
+            elif self.intro_frame_count == 7:
+                self.intro_timer = 20
+            elif self.intro_frame_count == 8:
+                self.intro_timer = 80
+            elif self.intro_frame_count == 9:
+                self.intro_timer = 15
+            elif self.intro_frame_count == 10:
+                self.intro_timer = 60
+            elif self.intro_frame_count == 11:
+                self.intro_playing = False
+
+            pygame.display.update()
+
+        if self.run:
+            self.mainMenu()
 
     def mainMenu(self):
         """
-        Main loop, runs on game launch
+        Main loop, runs after self.playIntro()
         :returns: None
         """
+        pygame.mixer.music.load("media/music/main_menu.mp3")
+        pygame.mixer.music.set_volume(0.05)
+        pygame.mixer.music.play(-1)
         self.loadLevel()
         self.enemy_send_timer = 60
 
@@ -85,6 +161,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
                     if self.new_game_button.isOver(pos):
+                        self.sfx['menu_nav'].play()
                         self.gameRun()
 
             if self.enemy_send_timer > 0:
@@ -104,6 +181,9 @@ class Game:
         Main loop, runs when a level is being played
         :returns: None
         """
+        pygame.mixer.music.load("media/music/level.mp3")
+        pygame.mixer.music.set_volume(0.05)
+        pygame.mixer.music.play(-1)
         self.loadLevel()
 
         while self.run: # mainloop ---------------------------------------------------------------- #
@@ -137,7 +217,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
                     selected_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
-    
+
                     # buy menu is active -------------------------------------------------------- #
                     if self.buy_menu_open:
                         if selected_tile[0] < self.buy_menu_pos[0] or selected_tile[0] > self.buy_menu_pos[0] + 50*(self.buy_menu_width-1) or selected_tile[1] < self.buy_menu_pos[1] or selected_tile[1] > self.buy_menu_pos[1]:
@@ -171,7 +251,7 @@ class Game:
                             for btn in self.turret_menu_buttons:
                                 if [btn[1][0]-5, btn[1][1]-5] != selected_tile: # btn[2] = sprite; btn[1] = position; btn[0] = type
                                     continue
-                                    
+
                                 if btn[0] == 'sell':
                                     self.money += round(self.selected_turret.cost*0.8)
                                     self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
@@ -281,17 +361,13 @@ class Game:
             if tr.shoot_cooldown > 0:
                 tr.shoot_cooldown -= 1
             for en in self.enemies:
-                distance = math.hypot(tr.x - en.x, tr.y - en.y)
-                if distance <= tr.range_ and tr.shoot_cooldown <= 0:
-                    tr.shoot_cooldown = tr.shoot_cooldown_default
-                    en.health -= tr.dmg
-                    tr.target = (en.x+en.x_offset, en.y+en.y_offset)
-                    tr.beam_drawtime = 7
-                    if en.health <= 0:
-                        self.money += en.value
-                        self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-                        self.enemies.remove(en)
+                if tr.attackTarget(en):
                     break
+                if en.health <= 0:
+                    self.money += en.value
+                    self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
+                    self.enemies.remove(en)
+
 
     def moveEnemy(self,en):
         """
@@ -414,9 +490,8 @@ class Game:
 
         pygame.display.update()
 
-
 g = Game()
-g.mainMenu()
+g.playIntro()
 
 pygame.quit()
 

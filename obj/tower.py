@@ -1,4 +1,5 @@
 import pygame
+import math
 pygame.init()
 Screen = pygame.display.set_mode((800,600))
 
@@ -38,13 +39,26 @@ class Tower:
         self.cost += round(self.cost*0.5)
         return True
 
+    def attackTarget(self, enemy):
+        """
+        Checks if 'enemy' is in range and if True, shoots it
+        :params enemy: Enemy object
+        :returns: True if enemy found and if enemy shot
+        """
+        distance = math.hypot(self.x - enemy.x, self.y - enemy.y)
+        if distance <= self.range_ and self.shoot_cooldown <= 0:
+            self.shoot_cooldown = self.shoot_cooldown_default
+            enemy.health -= self.dmg
+            self.target = (round(enemy.x+enemy.x_offset), round(enemy.y+enemy.y_offset))
+            self.beam_drawtime = 7
+            return True
+        return False
+
     def draw(self, display, mode=0):
         display.blit(self.base_sprite, self.base_center)
 
         if self.beam_drawtime: # drawing turret beam when shooting
             pygame.draw.line(display, (225,225,225), (self.x+self.x_offset, self.y+self.y_offset), self.target, round(self.beam_modifier * self.beam_drawtime))
-            pygame.draw.circle(display, (225,225,225), (self.x+self.x_offset, self.y+self.y_offset), round(self.beam_modifier * self.beam_drawtime/2))
-            pygame.draw.circle(display, (225,225,225), self.target, round(self.beam_modifier * self.beam_drawtime/2))
             self.beam_drawtime -= 1
         display.blit(self.turret_sprite, (self.x, self.y))
 
