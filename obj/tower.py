@@ -13,6 +13,7 @@ class Tower:
         self.dmg = dmg
         self.cost = cost
         self.level = level
+        self.max_level = len(turret_imgs)-1
         self.turret_sprite = turret_imgs[self.level]
         self.x_offset = self.turret_sprite.get_rect().size[0]//2
         self.y_offset = self.turret_sprite.get_rect().size[1]//2
@@ -28,7 +29,7 @@ class Tower:
         self.show_range = False
 
     def upgrade(self):
-        if self.level >= len(turret_imgs)-1:
+        if self.level >= self.max_level:
             return False
 
         self.level += 1

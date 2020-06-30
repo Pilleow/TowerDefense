@@ -10,9 +10,9 @@ class Button:
         self.color = color
         self.default_color = color
         self.clicked_color = [x-40 for x in self.color if x >= 40]
-        self.font = pygame.font.SysFont('Consolas', font)
+        self.font = pygame.font.Font('media/other/Adobe Dia.ttf', font)
         self.text = self.font.render(text, antialias, text_color)
-        self.text_center = self.text.get_rect(center=(self.width//2 + self.x, self.height//2 + self.y))
+        self.text_center = self.text.get_rect(center=(self.width//2 + self.x, self.height//2 + self.y+5))
 
     def isOver(self, pos):
         if pos[0] > self.x and pos[0] < self.x + self.width:

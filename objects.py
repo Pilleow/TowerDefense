@@ -44,6 +44,7 @@ class Kinetic_1(Tower):
         else:
             range_ = 0
         super().__init__(pos, 5, 250, base_imgs[0], level, range_, 60, 1)
+        self.description = "Easily affordable"
 
 
 class Kinetic_2(Tower):
@@ -53,6 +54,7 @@ class Kinetic_2(Tower):
         else:
             range_ = 0
         super().__init__(pos, 1, 500, base_imgs[1], level, range_, 10, 0.5)
+        self.description = "Fast shooting"
 
 
 class Kinetic_3(Tower):
@@ -62,9 +64,10 @@ class Kinetic_3(Tower):
         else:
             range_ = 0
         super().__init__(pos, 9, 1000, base_imgs[2], level, range_, 90, 1.5)
+        self.description = "Heavy artillery"
 
 
 # Buttons --------------------------------------------------------------------------- #
 class newGame(Button): # color, pos_res, text, text_color, font
     def __init__(self, pos_res):
-        super().__init__([100,100,100], pos_res, "New Game", [255,255,255], 60)
+        super().__init__([100,100,100], pos_res, "New Game", [255,255,255], 90)
