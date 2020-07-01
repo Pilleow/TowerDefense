@@ -1,4 +1,5 @@
-from objects import *
+from objects.objects import *
+from objects.menu import buyMenu, turretMenu
 from random import choice
 import pygame
 import json
@@ -12,7 +13,8 @@ pygame.mixer.init()
 pygame.display.set_icon(pygame.image.load("sprites/other/icon.gif"))
 pygame.display.set_caption("Tower Defence by Pilleow")
 
-text_font_l = pygame.font.Font('media/other/Adobe Dia.ttf', 200)
+text_font_xl = pygame.font.Font('media/other/Adobe Dia.ttf', 200)
+text_font_l = pygame.font.Font('media/other/Adobe Dia.ttf', 90)
 text_font_m = pygame.font.Font('media/other/Adobe Dia.ttf', 70)
 text_font_s = pygame.font.Font('media/other/Adobe Dia.ttf', 50)
 
@@ -21,6 +23,7 @@ class Game:
         self.resolution = (1000,700)
         self.clock = pygame.time.Clock()
         self.Screen = pygame.display.set_mode(self.resolution)
+        self.ScreenAlpha = pygame.display.set_mode(self.resolution)
         self.bg = pygame.image.load("sprites/other/background.png").convert()
         self.indicator = pygame.image.load('sprites/other/indicator.png').convert_alpha()
         self.menu_dropdown_top = pygame.image.load('sprites/menu/dropdown_top.png').convert_alpha()
@@ -31,8 +34,9 @@ class Game:
         self.turret_pos = []
         self.buy_menu_pos = [-50,-100]
         self.turret_menu_pos = [-50,-100]
+        self.parallax_move = [0,0]
         self.hovered_tile = self.resolution
-        self.backgrounds = [[self.bg, [self.resolution[0]*x, 0]] for x in range(3)]
+        self.backgrounds = [[self.bg, [self.resolution[0]*x, -50]] for x in range(-1,2)]
         self.available_turrets = [eval(f"Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
         self.intro_frames = [pygame.image.load(f"media/intro/frame_{index}.png").convert() for index in range(1,10)]
@@ -42,35 +46,39 @@ class Game:
             "menu_nav": pygame.mixer.Sound("media/sfx/menu_nav.wav")
         }
 
-        self.FPS = 60
+        self.FPS = 80
+        self.NOTIF_Y = 100
+        self.COST_Y = 50
+
         self.turret_menu_width = len(self.turret_menu_buttons)
         self.buy_menu_width = len(self.available_turrets)
         self.enemy_send_timer = 300
         self.enemy_send_index = 0
         self.enemy_type_index = 0
         self.intro_frame_count = 0
-        self.music_volume = 0.05
+        self.music_volume = 0
         self.sfx_volume = 0.1
         self.intro_timer = 30
         self.health = 50
-        self.money = 300
+        self.money = 500
         self.level = -1
         self.wave = 0
+        self.bg_move_neg = 1
 
         self.turret_menu_open = False
         self.buy_menu_open = False
         self.intro_playing = True
         self.run = True
 
-        self.title_text = text_font_l.render("Tower Defence", True, (250,250,250))
+        self.title_text = text_font_xl.render("Tower Defence", True, (250,250,250))
         self.cost_text = text_font_m.render(" ", True, (255,255,255))
         self.notif_text = text_font_s.render(" ", True, (255,100,100))
-        self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-        self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
+        self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
+        self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
 
         self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
-        self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
+        self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.COST_Y+self.parallax_move[1]))
+        self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.NOTIF_Y+self.parallax_move[1]))
 
         self.new_game_button = newGame((self.resolution[0]//3.5-175, 260, 350, 80))
 
@@ -121,15 +129,15 @@ class Game:
 
             # setting new timer / countdown
             if self.intro_frame_count < 7:
-                self.intro_timer = 5
+                self.intro_timer = 6
             elif self.intro_frame_count == 7:
-                self.intro_timer = 20
+                self.intro_timer = 24
             elif self.intro_frame_count == 8:
-                self.intro_timer = 80
+                self.intro_timer = 90
             elif self.intro_frame_count == 9:
-                self.intro_timer = 15
+                self.intro_timer = 18
             elif self.intro_frame_count == 10:
-                self.intro_timer = 60
+                self.intro_timer = 80
             elif self.intro_frame_count == 11:
                 self.intro_playing = False
 
@@ -158,12 +166,15 @@ class Game:
 
                     pos = pygame.mouse.get_pos()
 
+                    self.setParallax(pos)
                     if self.new_game_button.isOver(pos):
                         self.new_game_button.color =self.new_game_button.clicked_color
                     else:
                         self.new_game_button.color = self.new_game_button.default_color
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
+
+                    pos = pygame.mouse.get_pos()
 
                     if self.new_game_button.isOver(pos):
                         self.sfx['menu_nav'].play()
@@ -180,7 +191,8 @@ class Game:
             for en in self.enemies:
                 self.moveEnemy(en)
 
-            self.drawMenu()
+            if self.run:
+                self.drawMenu()
 
     def gameRun(self):
         """
@@ -202,151 +214,25 @@ class Game:
                     pos = pygame.mouse.get_pos()
                     self.hovered_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
 
+                    self.setParallax(pos)
                     if self.buy_menu_open:
-                        for tr in self.available_turrets:
-                            if self.hovered_tile != tr.pos:
-                                continue
-
-                            self.cost_text = text_font_m.render(str(tr.cost)+" $", True, (255,255,255))
-                            self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-                            if self.money >= tr.cost:
-                                self.notif_text = text_font_s.render(tr.description, True, (100,255,100))
-                                self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                                continue
-
-                            self.notif_text = text_font_s.render("Not enough money!", True, (255,100,100))
-                            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                            break
-
+                        buyMenu.hover(self)
                     elif self.turret_menu_open:
-                        for btn in self.turret_menu_buttons:
-                            if self.hovered_tile != [btn[1][0]-5, btn[1][1]-5]:
-                                continue
-
-                            if btn[0] == 'sell':
-                                self.notif_text = text_font_s.render("80% Refund", True, (100,255,100))
-                                self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                                self.cost_text = text_font_m.render(str(round(self.selected_turret.cost * 0.8))+" $", True, (255,255,255))
-                                self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-                                break
-
-                            else:
-                                if self.selected_turret.level >= self.selected_turret.max_level:
-                                    self.notif_text = text_font_s.render(" ", True, (255,100,100))
-                                    self.cost_text = text_font_m.render("Maxed out", True, (255,255,255))
-                                    self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-                                    continue
-
-                                self.cost_text = text_font_m.render(str(self.selected_turret.cost // 2)+" $", True, (255,255,255))
-                                self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-
-                                if self.money >= self.selected_turret.cost // 2:
-                                    self.notif_text = text_font_s.render(" ", True, (255,100,100))
-                                    continue
-
-                                self.notif_text = text_font_s.render("Not enough money!", True, (255,100,100))
-                                self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                                break
+                        turretMenu.hover(self)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    selected_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
+                    self.selected_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
 
-                    # buy menu is active -------------------------------------------------------- #
                     if self.buy_menu_open:
-                        if selected_tile[0] < self.buy_menu_pos[0] or selected_tile[0] > self.buy_menu_pos[0] + 50*(self.buy_menu_width-1) or selected_tile[1] < self.buy_menu_pos[1] or selected_tile[1] > self.buy_menu_pos[1]:
-                            self.cost_text = text_font_m.render(" ", True, (255,255,255))
-                            self.notif_text = text_font_s.render(" ", True, (255,100,100))
-                            self.buy_menu_open = False
-
-                        else:
-                            for tr in self.available_turrets:
-                                if tr.pos != selected_tile:
-                                    continue
-
-                                if self.money >= tr.cost:
-                                    pos = [self.buy_menu_pos[0]-50, self.buy_menu_pos[1]]
-                                    self.turrets.append(eval(f"{tr.__class__.__name__}({pos}, True)"))
-                                    self.turret_pos.append(pos)
-                                    self.buy_menu_open = False
-                                    self.money -= tr.cost
-                                    self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-                                    self.cost_text = text_font_m.render(" ", True, (255,255,255))
-                                    self.notif_text = text_font_s.render(" ", True, (100,255,100))
-                                    self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                                break
-
-                    # turret menu is active -------------------------------------------------------- #
+                        if buyMenu.operate(self):
+                            self.turrets.append(eval(self.turret_string))
                     elif self.turret_menu_open:
-                        if selected_tile[0] < self.turret_menu_pos[0] or selected_tile[0] > self.turret_menu_pos[0]+50*(self.turret_menu_width-1) or selected_tile[1] < self.turret_menu_pos[1] or selected_tile[1] > self.turret_menu_pos[1]:
-                            self.turret_menu_open = False
-                            self.selected_turret.show_range = False
-
-                        else:
-                            for btn in self.turret_menu_buttons:
-                                if [btn[1][0]-5, btn[1][1]-5] != selected_tile: # btn[2] = sprite; btn[1] = position; btn[0] = type
-                                    continue
-
-                                if btn[0] == 'sell':
-                                    self.money += round(self.selected_turret.cost*0.8)
-                                    self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-                                    self.turrets.remove(self.selected_turret)
-                                    self.turret_pos.remove(self.selected_turret.pos)
-                                    self.selected_turret.show_range = False
-                                    self.turret_menu_open = False
-
-                                elif btn[0] == 'upgrade':
-                                    if self.money >= tr.cost*0.5:
-                                        prev_cost = tr.cost
-                                        if tr.upgrade():
-                                            if self.selected_turret.level >= self.selected_turret.max_level:
-                                                self.notif_text = text_font_s.render(" ", True, (255,100,100))
-                                                self.cost_text = text_font_m.render("Maxed out", True, (255,255,255))
-                                                self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-                                                continue
-
-                                            self.money -= round(prev_cost*0.5)
-                                            self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
-
-                                            self.cost_text = text_font_m.render(str(round(self.selected_turret.cost * 0.5))+" $", True, (255,255,255))
-                                            self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2, 35))
-                                            if self.money >= self.selected_turret.cost // 2:
-                                                self.notif_text = text_font_s.render(" ", True, (255,100,100))
-                                                continue
-
-                                            self.notif_text = text_font_s.render("Not enough money!", True, (255,100,100))
-                                            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2, 75))
-                                            break
-                                break
-
-                    # opening turret menu ----------------------------------------------------- #
-                    elif selected_tile in self.turret_pos:
-                        self.turret_menu_open = True
-                        self.turret_menu_pos = [selected_tile[0] + 50, selected_tile[1]]
-
-                        count = 0
-                        for btn in self.turret_menu_buttons:
-                            btn[1][0] = self.turret_menu_pos[0] + 50 * count + 5
-                            btn[1][1] = self.turret_menu_pos[1] + 5
-                            count += 1
-
-                        for tr in self.turrets:
-                            if tr.pos != selected_tile:
-                                continue
-
-                            self.selected_turret = tr
-                            self.selected_turret.show_range = True
-                            break
-
-                    # opening buy menu -------------------------------------------------------- #
-                    elif selected_tile in self.tiles:
-                        self.buy_menu_open = True
-                        self.buy_menu_pos = [selected_tile[0] + 50, selected_tile[1]]
-
-                        count = 0
-                        for tr in self.available_turrets:
-                            tr.__init__([self.buy_menu_pos[0] + 50 * count, self.buy_menu_pos[1]], False)
-                            count += 1
+                        turretMenu.operate(self)
+                    elif self.selected_tile in self.turret_pos:
+                        turretMenu.activate(self)
+                    elif self.selected_tile in self.tiles:
+                        buyMenu.activate(self)
 
             # sending enemies -------------------------------------------------------- #
             if self.enemy_send_timer > 0:
@@ -377,7 +263,23 @@ class Game:
             self.detectEnemy()
             self.drawGame()
 
+    def setParallax(self, pos):
+        """
+        Sets the parallax relative to mouse position
+        :params pos: mouse position
+        :returns: None
+        """
+        self.parallax_move = [(self.resolution[0]//2-pos[0])/20, (self.resolution[1]//2-pos[1])/10]
+        if self.parallax_move[0] > 0:
+            self.bg_move_neg = -1
+        else:
+            self.bg_move_neg = 1
+
     def loadMusic(self, name, volume=0.1, looped=True, path="media/music/"):
+        """
+        Loads music and plays it
+        :returns: None
+        """
         pygame.mixer.music.load(f"{path}{name}")
         pygame.mixer.music.set_volume(volume)
 
@@ -392,7 +294,7 @@ class Game:
         :returns: None
         """
         self.health = 50
-        self.money = 3000
+        self.money = 500
         self.wave = 0
         self.enemy_send_timer = 300
         self.enemy_send_index = 0
@@ -422,7 +324,7 @@ class Game:
                     break
                 if en.health <= 0:
                     self.money += en.value
-                    self.money_text = text_font_m.render(str(self.money)+" $", True, (255,255,255))
+                    self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
                     self.enemies.remove(en)
 
 
@@ -449,7 +351,7 @@ class Game:
             else:
                 self.health -= en.dmg
                 self.enemies.remove(en)
-                self.health_text = text_font_m.render(str(self.health), True, (255,150,150))
+                self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
                 if self.health <= 0:
                     print("Game Over - No lives left.")
                     self.run = False
@@ -459,12 +361,15 @@ class Game:
         Draws the background image sliding to the left
         :returns: None
         """
-
         for bg in self.backgrounds:
-            self.Screen.blit(bg[0],bg[1])
-            bg[1][0] -= 1
-            if bg[1][0] < -self.resolution[0]:
-                self.backgrounds.append([self.bg, [self.resolution[0]*2, 0]])
+            self.Screen.blit(bg[0],[bg[1][0]+self.parallax_move[0], bg[1][1]+self.parallax_move[1]])
+            bg[1][0] -= 0.6 * self.bg_move_neg
+
+            if bg[1][0] < -2*self.resolution[0]:
+                self.backgrounds.append([self.bg, [self.resolution[0], -50]])
+                self.backgrounds.remove(bg)
+            if bg[1][0] > 2*self.resolution[0]:
+                self.backgrounds.append([self.bg, [-self.resolution[0], -50]])
                 self.backgrounds.remove(bg)
 
     def drawMenu(self):
@@ -526,27 +431,30 @@ class Game:
         if self.buy_menu_open:
             pygame.draw.rect(self.Screen, [100,100,100], (self.buy_menu_pos[0], self.buy_menu_pos[1], 50*self.buy_menu_width, 50))
             pygame.draw.rect(self.Screen, [80,80,80], (self.buy_menu_pos[0]+5, self.buy_menu_pos[1]+5, 50*self.buy_menu_width-10, 40))
-            self.Screen.blit(self.menu_dropdown_top, (self.resolution[0]//2 - 220, 0))
 
             for tr in self.available_turrets:
                 tr.draw(self.Screen)
 
+
+            self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.COST_Y+self.parallax_move[1]/7))
+            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.NOTIF_Y+self.parallax_move[1]/7))
             Screen.blit(self.cost_text, self.cost_center)
             Screen.blit(self.notif_text, self.notif_text_center)
 
         elif self.turret_menu_open:
             pygame.draw.rect(self.Screen, [100,100,100], (self.turret_menu_pos[0], self.turret_menu_pos[1], 50*self.turret_menu_width, 50))
             pygame.draw.rect(self.Screen, [80,80,80], (self.turret_menu_pos[0]+5, self.turret_menu_pos[1]+5, 50*self.turret_menu_width-10, 40))
-            self.Screen.blit(self.menu_dropdown_top, (self.resolution[0]//2 - 220, 0))
 
             for btn in self.turret_menu_buttons:
                 self.Screen.blit(btn[2],btn[1])
 
+            self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.COST_Y+self.parallax_move[1]/7))
+            self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.NOTIF_Y+self.parallax_move[1]/7))
             self.Screen.blit(self.cost_text, self.cost_center)
             self.Screen.blit(self.notif_text, self.notif_text_center)
 
-        Screen.blit(self.money_text, (26,15))
-        Screen.blit(self.health_text, (26,65))
+        Screen.blit(self.money_text, (30+self.parallax_move[0]/5,20+self.parallax_move[1]/5))
+        Screen.blit(self.health_text, (30+self.parallax_move[0]/5,80+self.parallax_move[1]/5))
         if self.hovered_tile in self.tiles and not self.buy_menu_open and not self.turret_menu_open:
             self.Screen.blit(self.indicator, self.hovered_tile)
 
