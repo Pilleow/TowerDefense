@@ -13,12 +13,12 @@ enemy_imgs = [
     pygame.transform.scale(pygame.image.load("sprites/enemies/square_2.png").convert_alpha(), (40,40)),
 ]
 
-base_imgs = [pygame.transform.scale(pygame.image.load(f"sprites/towers/base/base_{x}.png"),(40,40)) for x in range(1,4)]
+base_imgs = [pygame.image.load(f"sprites/towers/base/base_{x}.png") for x in range(1,4)]
 
 # Enemies --------------------------------------------------------------------------- #
 class Circle_1(Enemy):
     def __init__(self, start):
-        super().__init__(start, 25, 5, 5, 10, enemy_imgs[0])
+        super().__init__(start, 25, 5, 5, 5, enemy_imgs[0])
 
 
 class Circle_2(Enemy):
@@ -28,12 +28,12 @@ class Circle_2(Enemy):
 
 class Square_1(Enemy):
     def __init__(self, start):
-        super().__init__(start, 40, 15, 7, 20, enemy_imgs[2])
+        super().__init__(start, 40, 15, 7, 15, enemy_imgs[2])
 
 
 class Square_2(Enemy):
     def __init__(self, start):
-        super().__init__(start, 50, 20, 10, 25, enemy_imgs[3])
+        super().__init__(start, 50, 20, 10, 20, enemy_imgs[3])
 
 
 # Turrets --------------------------------------------------------------------------- #
@@ -96,3 +96,8 @@ class videoSettingsButton(Button):
 class backSettingsButton(Button):
     def __init__(self, pos_res):
         super().__init__([75,75,75], pos_res, "Back", [255,255,255], 90)
+
+
+class tryAgainButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([75,75,75], pos_res, "Main Menu", [255,255,255], 90)
