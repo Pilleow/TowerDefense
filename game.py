@@ -1,5 +1,5 @@
-from objects.objects import *
-from objects.menu import buyMenu, turretMenu
+import objects.objects as objects
+from objects.menu import buyMenu, turretMenu, settingsMenu
 from random import choice
 import pygame
 import json
@@ -37,7 +37,7 @@ class Game:
         self.parallax_move = [0,0]
         self.hovered_tile = self.resolution
         self.backgrounds = [[self.bg, [self.resolution[0]*x, -50]] for x in range(-1,2)]
-        self.available_turrets = [eval(f"Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
+        self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
         self.intro_frames = [pygame.image.load(f"media/intro/frame_{index}.png").convert() for index in range(1,10)]
         self.turret_menu_buttons = [ [x, [-50,-100], pygame.transform.scale(pygame.image.load(f"sprites/buttons/turretMenu/{x}.png"),(40,40))] for x in ['sell','upgrade'] ]
@@ -56,8 +56,6 @@ class Game:
         self.enemy_send_index = 0
         self.enemy_type_index = 0
         self.intro_frame_count = 0
-        self.music_volume = 0
-        self.sfx_volume = 0.1
         self.intro_timer = 30
         self.health = 50
         self.money = 500
@@ -75,17 +73,34 @@ class Game:
         self.notif_text = text_font_s.render(" ", True, (255,100,100))
         self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
         self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
+        self.music_credits_text = text_font_m.render("Music - Adam Haynes", True, (150,255,150))
+        self.art_credits_text = text_font_m.render("Art - Kenney Vleugels & Igor Zamojski", True, (150,255,150))
+        self.dev_credits_text = text_font_m.render("Development - Igor Zamojski", True, (150,255,150))
 
         self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
         self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.COST_Y+self.parallax_move[1]))
         self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.NOTIF_Y+self.parallax_move[1]))
+        self.music_credits_text_center = self.music_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2+100))
+        self.art_credits_text_center = self.art_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2))
+        self.dev_credits_text_center = self.dev_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2-100))
 
-        self.new_game_button = newGame((self.resolution[0]//3.5-175, 260, 350, 80))
+        self.new_game_button = objects.newGameButton((self.resolution[0]/3.5-175, 255, 350, 80))
+        self.settings_button = objects.settingsButton((self.resolution[0]/3.5-175, 385, 350, 80))
+        self.credits_button = objects.creditsButton((self.resolution[0]/3.5-175, 515, 350, 80))
+        self.main_menu_buttons = [self.new_game_button, self.settings_button, self.credits_button]
+        self.audio_settings_button = objects.audioSettingsButton((self.resolution[0]/2-260, self.resolution[1]/2-120, 520, 100))
+        self.video_settings_button = objects.videoSettingsButton((self.resolution[0]/2-260, self.resolution[1]/2+35, 520, 100))
+        self.back_settings_button = objects.backSettingsButton((self.resolution[0]/2-75, self.resolution[1]/1.275, 150, 80))
+        self.settings_buttons = [self.audio_settings_button, self.video_settings_button, self.back_settings_button]
 
         with open("data/levels.json") as f:
             self.levels = json.load(f)
         with open("data/waves.json") as f:
             self.waves = json.load(f)
+        with open("data/settings.json") as f:
+            settings = json.load(f)
+            self.music_volume = settings['music_volume']
+            self.sfx_volume = settings['sfx_volume']
 
         for key in self.sfx:
             self.sfx[key].set_volume(self.sfx_volume)
@@ -155,7 +170,7 @@ class Game:
         self.loadLevel()
         self.enemy_send_timer = 60
 
-        while self.run:
+        while self.run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
 
             for event in pygame.event.get():
@@ -167,24 +182,36 @@ class Game:
                     pos = pygame.mouse.get_pos()
 
                     self.setParallax(pos)
-                    if self.new_game_button.isOver(pos):
-                        self.new_game_button.color =self.new_game_button.clicked_color
-                    else:
-                        self.new_game_button.color = self.new_game_button.default_color
+                    for button in self.main_menu_buttons:
+                        if button.isOver(pos):
+                            button.color = button.clicked_color
+                        else:
+                            button.color = button.default_color
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
                     pos = pygame.mouse.get_pos()
 
-                    if self.new_game_button.isOver(pos):
+                    if self.main_menu_buttons[0].isOver(pos): # new game
+                        self.main_menu_buttons[0].color = self.main_menu_buttons[0].default_color
                         self.sfx['menu_nav'].play()
                         self.loadMusic("level.mp3", self.music_volume)
                         self.gameRun()
 
+                    elif self.main_menu_buttons[1].isOver(pos): # settings
+                        self.main_menu_buttons[1].color = self.main_menu_buttons[1].default_color
+                        self.sfx['menu_nav'].play()
+                        settingsMenu.settings_active(self)
+
+                    elif self.main_menu_buttons[2].isOver(pos): # credits
+                        self.main_menu_buttons[2].color = self.main_menu_buttons[2].default_color
+                        self.sfx['menu_nav'].play()
+                        self.showCredits()
+
             if self.enemy_send_timer > 0:
                 self.enemy_send_timer -= 1
             else:
-                self.enemies.append(eval(f'{choice(["Circle_1", "Circle_2","Square_1","Square_2"])}(self.levels[self.level][0])'))
+                self.enemies.append(eval(f'objects.{choice(["Circle_1", "Circle_2","Square_1","Square_2"])}(self.levels[self.level][0])'))
                 self.enemy_send_timer = 60
                 self.health = 50
 
@@ -193,6 +220,27 @@ class Game:
 
             if self.run:
                 self.drawMenu()
+
+    def showCredits(self):
+        """
+        Main loop, runs when credits are selected in mainMenu
+        :returns: None
+        """
+        show_credits = True
+        while show_credits: # mainloop ---------------------------------------------------------------- #
+            self.clock.tick(self.FPS)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    show_credits = False
+
+                if event.type == pygame.MOUSEMOTION:
+                    pos = pygame.mouse.get_pos()
+                    self.setParallax(pos)
+
+            self.drawCredits()
+
+
 
     def gameRun(self):
         """
@@ -238,7 +286,7 @@ class Game:
             if self.enemy_send_timer > 0:
                 self.enemy_send_timer -= 1
             else:
-                self.enemies.append(eval(f"{self.waves[self.wave][self.enemy_type_index][0]}(self.levels[self.level][0])"))
+                self.enemies.append(eval(f"objects.{self.waves[self.wave][self.enemy_type_index][0]}(self.levels[self.level][0])"))
                 self.enemy_send_index += 1
                 self.enemy_send_timer = self.waves[self.wave][self.enemy_type_index][2]
 
@@ -375,8 +423,9 @@ class Game:
     def drawMenu(self):
         self.drawBg()
 
-        Screen.blit(self.title_text, self.title_text_center)
-        self.new_game_button.draw(self.Screen)
+        self.Screen.blit(self.title_text, self.title_text_center)
+        for button in self.main_menu_buttons:
+            button.draw(self.Screen)
 
         for p in self.levels[self.level]:
             if self.levels[self.level].index(p) == 0:
@@ -397,6 +446,18 @@ class Game:
             en.draw(self.Screen)
         for tr in self.turrets:
             tr.draw(self.Screen)
+
+        pygame.display.update()
+
+    def drawCredits(self):
+        """
+        Draws credits when selected in mainMenu
+        :returns: None
+        """
+        self.drawBg()
+        self.Screen.blit(self.music_credits_text, [self.music_credits_text_center[0]+self.parallax_move[0]/2, self.music_credits_text_center[1]+self.parallax_move[1]/2])
+        self.Screen.blit(self.art_credits_text, [self.art_credits_text_center[0]+self.parallax_move[0]/2, self.art_credits_text_center[1]+self.parallax_move[1]/2])
+        self.Screen.blit(self.dev_credits_text, [self.dev_credits_text_center[0]+self.parallax_move[0]/2, self.dev_credits_text_center[1]+self.parallax_move[1]/2])
 
         pygame.display.update()
 
@@ -435,11 +496,10 @@ class Game:
             for tr in self.available_turrets:
                 tr.draw(self.Screen)
 
-
             self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.COST_Y+self.parallax_move[1]/7))
             self.notif_text_center = self.notif_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0]/7+25, self.NOTIF_Y+self.parallax_move[1]/7))
-            Screen.blit(self.cost_text, self.cost_center)
-            Screen.blit(self.notif_text, self.notif_text_center)
+            self.Screen.blit(self.cost_text, self.cost_center)
+            self.Screen.blit(self.notif_text, self.notif_text_center)
 
         elif self.turret_menu_open:
             pygame.draw.rect(self.Screen, [100,100,100], (self.turret_menu_pos[0], self.turret_menu_pos[1], 50*self.turret_menu_width, 50))
@@ -453,8 +513,8 @@ class Game:
             self.Screen.blit(self.cost_text, self.cost_center)
             self.Screen.blit(self.notif_text, self.notif_text_center)
 
-        Screen.blit(self.money_text, (30+self.parallax_move[0]/5,20+self.parallax_move[1]/5))
-        Screen.blit(self.health_text, (30+self.parallax_move[0]/5,80+self.parallax_move[1]/5))
+        self.Screen.blit(self.money_text, (30+self.parallax_move[0]/5,20+self.parallax_move[1]/5))
+        self.Screen.blit(self.health_text, (30+self.parallax_move[0]/5,80+self.parallax_move[1]/5))
         if self.hovered_tile in self.tiles and not self.buy_menu_open and not self.turret_menu_open:
             self.Screen.blit(self.indicator, self.hovered_tile)
 
