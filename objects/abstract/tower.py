@@ -3,7 +3,7 @@ import math
 pygame.init()
 Screen = pygame.display.set_mode((800,600))
 
-turret_imgs = [pygame.transform.scale(pygame.image.load(f"sprites/towers/head/level_{x}.png").convert_alpha(), (20,20)) for x in range(1,5)]
+turret_imgs = [pygame.image.load(f"sprites/towers/head/level_{x}.png").convert_alpha() for x in range(1,5)]
 
 
 class Tower:
@@ -34,9 +34,9 @@ class Tower:
 
         self.level += 1
         self.turret_sprite = turret_imgs[self.level]
-        self.dmg += 1 + 1*self.level-1
+        self.dmg += 1
         self.shoot_cooldown_default -= 1 * self.shoot_cooldown_default/10 - 1
-        self.range_ += 5
+        self.range_ += 15
         self.cost += round(self.cost*0.5)
         return True
 
@@ -64,4 +64,4 @@ class Tower:
         display.blit(self.turret_sprite, (self.x, self.y))
 
         if self.range_ > 0 and self.show_range:
-            pygame.draw.circle(display, (200,255,200), (self.pos[0]+25, self.pos[1]+25), self.range_, 2)
+            pygame.draw.circle(display, (200,200,200), (self.pos[0]+25, self.pos[1]+25), self.range_, 2)

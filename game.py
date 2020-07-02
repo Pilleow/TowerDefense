@@ -1,9 +1,8 @@
 import objects.objects as objects
 from objects.menu import buyMenu, turretMenu, settingsMenu
 from random import choice
+import json, math
 import pygame
-import json
-import math
 
 pygame.init()
 pygame.mixer.quit()
@@ -24,30 +23,29 @@ class Game:
         self.clock = pygame.time.Clock()
         self.Screen = pygame.display.set_mode(self.resolution)
         self.ScreenAlpha = pygame.display.set_mode(self.resolution)
-        self.bg = pygame.image.load("sprites/other/background.png").convert()
+
         self.indicator = pygame.image.load('sprites/other/indicator.png').convert_alpha()
-        self.menu_dropdown_top = pygame.image.load('sprites/menu/dropdown_top.png').convert_alpha()
 
         self.tiles = []
         self.enemies = []
         self.turrets = []
         self.turret_pos = []
+        self.parallax_move = [0,0]
         self.buy_menu_pos = [-50,-100]
         self.turret_menu_pos = [-50,-100]
-        self.parallax_move = [0,0]
         self.hovered_tile = self.resolution
-        self.tile_sprites = [pygame.image.load(f'sprites/path/tile_{x}.png').convert() for x in range(1,3)]
-        self.backgrounds = [[self.bg, [self.resolution[0]*x, -50]] for x in range(-1,2)]
-        self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
+        self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
+        self.tile_sprites = [pygame.image.load(f'sprites/path/tile_{x}.png').convert() for x in range(1,5)]
         self.intro_frames = [pygame.image.load(f"media/intro/frame_{index}.png").convert() for index in range(1,10)]
+        self.backgrounds = [[pygame.image.load("sprites/other/background.png").convert(), [self.resolution[0]*x, -50]] for x in range(-1,2)]
         self.turret_menu_buttons = [ [x, [-50,-100], pygame.transform.scale(pygame.image.load(f"sprites/buttons/turretMenu/{x}.png"),(40,40))] for x in ['sell','upgrade'] ]
 
         self.sfx = {
             "menu_nav": pygame.mixer.Sound("media/sfx/menu_nav.wav")
         }
 
-        self.FPS = 80
+        self.FPS = 90
         self.NOTIF_Y = 100
         self.COST_Y = 50
 
@@ -62,7 +60,7 @@ class Game:
         self.money = 500
         self.level = -1
         self.wave = 0
-        self.bg_move_neg = 1
+        self.kills = 0
 
         self.turret_menu_open = False
         self.buy_menu_open = False
@@ -77,6 +75,9 @@ class Game:
         self.music_credits_text = text_font_m.render("Music - Adam Haynes", True, (150,255,150))
         self.art_credits_text = text_font_m.render("Art - Kenney Vleugels & Igor Zamojski", True, (150,255,150))
         self.dev_credits_text = text_font_m.render("Development - Igor Zamojski", True, (150,255,150))
+        self.game_over_text_1 = text_font_xl.render("Game Over", True, (255,255,255))
+        self.game_over_text_2 = text_font_l.render("Good luck next time!", True, (155,155,155))
+        self.game_over_stats = text_font_m.render(f"Kills: {self.kills}", True, (200,200,200))
 
         self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
         self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.COST_Y+self.parallax_move[1]))
@@ -84,6 +85,9 @@ class Game:
         self.music_credits_text_center = self.music_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2+100))
         self.art_credits_text_center = self.art_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2))
         self.dev_credits_text_center = self.dev_credits_text.get_rect(center=(self.resolution[0]/2, self.resolution[1]/2-100))
+        self.game_over_text_1_center = self.game_over_text_1.get_rect(center=(self.resolution[0]//2, self.resolution[1]//4-5))
+        self.game_over_text_2_center = self.game_over_text_2.get_rect(center=(self.resolution[0]//2, self.resolution[1]//4+75))
+        self.game_over_stats_center = self.game_over_stats.get_rect(center=(self.resolution[0]//2, self.resolution[1]//2))
 
         self.new_game_button = objects.newGameButton((self.resolution[0]/3.5-175, 255, 350, 80))
         self.settings_button = objects.settingsButton((self.resolution[0]/3.5-175, 385, 350, 80))
@@ -93,6 +97,7 @@ class Game:
         self.video_settings_button = objects.videoSettingsButton((self.resolution[0]/2-260, self.resolution[1]/2+35, 520, 100))
         self.back_settings_button = objects.backSettingsButton((self.resolution[0]/2-75, self.resolution[1]/1.275, 150, 80))
         self.settings_buttons = [self.audio_settings_button, self.video_settings_button, self.back_settings_button]
+        self.try_again_button = objects.tryAgainButton((self.resolution[0]/2-260, self.resolution[1]/2+75, 520, 100))
 
         with open("data/levels.json") as f:
             self.levels = json.load(f)
@@ -223,6 +228,40 @@ class Game:
             if self.run:
                 self.drawMenu()
 
+    def gameOver(self):
+        """
+        Main loop, runs when credits are selected in mainMenu
+        :returns: None
+        """
+        self.game_over_stats = text_font_m.render(f"Kills: {self.kills}", True, (200,200,200))
+        self.level = -1
+        pygame.mixer.music.stop()
+        show_game_over = True
+        while show_game_over and self.run: # mainloop ---------------------------------------------------------------- #
+            self.clock.tick(self.FPS)
+            pos = pygame.mouse.get_pos()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.run = False
+
+                if event.type == pygame.MOUSEMOTION:
+                    self.setParallax(pos)
+
+                    if self.try_again_button.isOver(pos):
+                        self.try_again_button.color = self.try_again_button.clicked_color
+                    else:
+                        self.try_again_button.color = self.try_again_button.default_color
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.try_again_button.isOver(pos):
+                        self.sfx['menu_nav'].play()
+                        show_game_over = False
+
+            self.drawGameOver()
+
+        self.loadLevel()
+
     def showCredits(self):
         """
         Main loop, runs when credits are selected in mainMenu
@@ -242,16 +281,15 @@ class Game:
 
             self.drawCredits()
 
-
-
     def gameRun(self):
         """
         Main loop, runs when a level is being played
         :returns: None
         """
         self.loadLevel()
+        self.game_run = True
 
-        while self.run: # mainloop ---------------------------------------------------------------- #
+        while self.run and self.game_run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
 
             for event in pygame.event.get():
@@ -313,6 +351,8 @@ class Game:
             self.detectEnemy()
             self.drawGame()
 
+        self.gameOver()
+
     def setParallax(self, pos):
         """
         Sets the parallax relative to mouse position
@@ -321,10 +361,6 @@ class Game:
         """
         if self.parallax_mod > 0.02:
             self.parallax_move = [((self.resolution[0]//2-pos[0])/20)*self.parallax_mod, ((self.resolution[1]//2-pos[1])/15)*self.parallax_mod]
-            if self.parallax_move[0] > 0:
-                self.bg_move_neg = -1
-            else:
-                self.bg_move_neg = 1
 
     def loadMusic(self, name, volume=0.1, looped=True, path="media/music/"):
         """
@@ -347,6 +383,7 @@ class Game:
         self.health = 50
         self.money = 500
         self.wave = 0
+        self.kills = 0
         self.enemy_send_timer = 300
         self.enemy_send_index = 0
         self.enemy_type_index = 0
@@ -354,6 +391,8 @@ class Game:
         self.enemies = []
         self.tiles = []
         self.turrets = []
+        self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
+        self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
 
         self.level_length = len(self.levels[self.level])
         for square in self.levels[self.level]:
@@ -377,7 +416,7 @@ class Game:
                     self.money += en.value
                     self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
                     self.enemies.remove(en)
-
+                    self.kills += 1
 
     def moveEnemy(self,en):
         """
@@ -404,8 +443,24 @@ class Game:
                 self.enemies.remove(en)
                 self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
                 if self.health <= 0:
-                    print("Game Over - No lives left.")
-                    self.run = False
+                    self.game_run = False
+
+    def drawBoard(self):
+        for p in self.levels[self.level]:
+            if self.levels[self.level].index(p) == 0:
+                self.Screen.blit(self.tile_sprites[3], (p[0], p[1], 50, 50))
+            elif self.levels[self.level].index(p) == len(self.levels[self.level])-1:
+                self.Screen.blit(self.tile_sprites[2], (p[0], p[1], 50, 50))
+            else:
+                self.Screen.blit(self.tile_sprites[1], (p[0], p[1], 50, 50))
+
+        for t in self.tiles:
+            self.Screen.blit(self.tile_sprites[0], (t[0], t[1], 50, 50))
+
+        for en in self.enemies:
+            en.draw(self.Screen)
+        for tr in self.turrets:
+            tr.draw(self.Screen)
 
     def drawBg(self):
         """
@@ -414,7 +469,6 @@ class Game:
         """
         for bg in self.backgrounds:
             self.Screen.blit(bg[0],[bg[1][0]+self.parallax_move[0], bg[1][1]+self.parallax_move[1]])
-            bg[1][0] -= 0.6 * self.bg_move_neg
 
             if bg[1][0] < -2*self.resolution[0]:
                 self.backgrounds.append([self.bg, [self.resolution[0], -50]])
@@ -430,25 +484,21 @@ class Game:
         for button in self.main_menu_buttons:
             button.draw(self.Screen)
 
-        for p in self.levels[self.level]:
-            if self.levels[self.level].index(p) == 0:
-                pygame.draw.rect(self.Screen, (200,100,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (250,150,150), (p[0]+5, p[1]+5, 40, 40))
-            elif self.levels[self.level].index(p) == len(self.levels[self.level])-1:
-                pygame.draw.rect(self.Screen, (100,200,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (150,250,150), (p[0]+5, p[1]+5, 40, 40))
-            else:
-                pygame.draw.rect(self.Screen, (140,140,140), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (170,170,170), (p[0]+5, p[1]+5, 40, 40))
+        self.drawBoard()
 
-        for t in self.tiles:
-            pygame.draw.rect(self.Screen, (40,40,40), (t[0], t[1], 50, 50))
-            pygame.draw.rect(self.Screen, (70,70,70), (t[0]+5, t[1]+5, 40, 40))
+        pygame.display.update()
 
-        for en in self.enemies:
-            en.draw(self.Screen)
-        for tr in self.turrets:
-            tr.draw(self.Screen)
+    def drawGameOver(self):
+        """
+        Draws game over
+        :returns: None
+        """
+        self.drawBg()
+
+        self.Screen.blit(self.game_over_text_1, self.game_over_text_1_center)
+        self.Screen.blit(self.game_over_text_2, self.game_over_text_2_center)
+        self.Screen.blit(self.game_over_stats, self.game_over_stats_center)
+        self.try_again_button.draw(self.Screen)
 
         pygame.display.update()
 
@@ -470,24 +520,7 @@ class Game:
         :returns: None
         """
         self.drawBg()
-
-        for p in self.levels[self.level]:
-            if self.levels[self.level].index(p) == 0:
-                pygame.draw.rect(self.Screen, (100,200,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (150,250,150), (p[0]+5, p[1]+5, 40, 40))
-            elif self.levels[self.level].index(p) == len(self.levels[self.level])-1:
-                pygame.draw.rect(self.Screen, (140,140,140), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (170,170,170), (p[0]+5, p[1]+5, 40, 40))
-            else:
-                self.Screen.blit(self.tile_sprites[1], (p[0], p[1], 50, 50))
-
-        for t in self.tiles:
-            self.Screen.blit(self.tile_sprites[0], (t[0], t[1], 50, 50))
-
-        for en in self.enemies:
-            en.draw(self.Screen)
-        for tr in self.turrets:
-            tr.draw(self.Screen)
+        self.drawBoard()
 
         # GUI
         if self.buy_menu_open:
