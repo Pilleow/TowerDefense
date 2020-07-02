@@ -36,6 +36,7 @@ class Game:
         self.turret_menu_pos = [-50,-100]
         self.parallax_move = [0,0]
         self.hovered_tile = self.resolution
+        self.tile_sprites = [pygame.image.load(f'sprites/path/tile_{x}.png').convert() for x in range(1,3)]
         self.backgrounds = [[self.bg, [self.resolution[0]*x, -50]] for x in range(-1,2)]
         self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
@@ -101,6 +102,7 @@ class Game:
             settings = json.load(f)
             self.music_volume = settings['music_volume']
             self.sfx_volume = settings['sfx_volume']
+            self.parallax_mod = settings['parallax_mod']
 
         for key in self.sfx:
             self.sfx[key].set_volume(self.sfx_volume)
@@ -317,11 +319,12 @@ class Game:
         :params pos: mouse position
         :returns: None
         """
-        self.parallax_move = [(self.resolution[0]//2-pos[0])/20, (self.resolution[1]//2-pos[1])/10]
-        if self.parallax_move[0] > 0:
-            self.bg_move_neg = -1
-        else:
-            self.bg_move_neg = 1
+        if self.parallax_mod > 0.02:
+            self.parallax_move = [((self.resolution[0]//2-pos[0])/20)*self.parallax_mod, ((self.resolution[1]//2-pos[1])/15)*self.parallax_mod]
+            if self.parallax_move[0] > 0:
+                self.bg_move_neg = -1
+            else:
+                self.bg_move_neg = 1
 
     def loadMusic(self, name, volume=0.1, looped=True, path="media/music/"):
         """
@@ -470,18 +473,16 @@ class Game:
 
         for p in self.levels[self.level]:
             if self.levels[self.level].index(p) == 0:
-                pygame.draw.rect(self.Screen, (200,100,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (250,150,150), (p[0]+5, p[1]+5, 40, 40))
-            elif self.levels[self.level].index(p) == len(self.levels[self.level])-1:
                 pygame.draw.rect(self.Screen, (100,200,100), (p[0], p[1], 50, 50))
                 pygame.draw.rect(self.Screen, (150,250,150), (p[0]+5, p[1]+5, 40, 40))
-            else:
+            elif self.levels[self.level].index(p) == len(self.levels[self.level])-1:
                 pygame.draw.rect(self.Screen, (140,140,140), (p[0], p[1], 50, 50))
                 pygame.draw.rect(self.Screen, (170,170,170), (p[0]+5, p[1]+5, 40, 40))
+            else:
+                self.Screen.blit(self.tile_sprites[1], (p[0], p[1], 50, 50))
 
         for t in self.tiles:
-            pygame.draw.rect(self.Screen, (40,40,40), (t[0], t[1], 50, 50))
-            pygame.draw.rect(self.Screen, (70,70,70), (t[0]+5, t[1]+5, 40, 40))
+            self.Screen.blit(self.tile_sprites[0], (t[0], t[1], 50, 50))
 
         for en in self.enemies:
             en.draw(self.Screen)
