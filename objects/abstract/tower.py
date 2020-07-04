@@ -1,5 +1,6 @@
 import pygame
 import math
+from random import randint
 
 pygame.init()
 pygame.mixer.quit()

@@ -1,5 +1,5 @@
 import objects.objects as objects
-from objects.menu import buyMenu, turretMenu, settingsMenu
+from objects.menu import buyMenu, turretMenu, settingsMenu, animations
 from random import choice, randint
 import json, math
 import pygame
@@ -31,6 +31,7 @@ class Game:
         self.turrets = []
         self.turret_pos = []
         self.parallax_move = [0,0]
+        self.active_animations = []
         self.buy_menu_pos = [-50,-100]
         self.turret_menu_pos = [-50,-100]
         self.hue = choice([[255,0,0],[0,255,0],[0,0,255]])
@@ -61,6 +62,7 @@ class Game:
         self.FPS = 90
         self.NOTIF_Y = 100
         self.COST_Y = 50
+        self.VOLUME_MOD = 0.1
 
         self.turret_menu_width = len(self.turret_menu_buttons)
         self.buy_menu_width = len(self.available_turrets)
@@ -74,6 +76,7 @@ class Game:
         self.level = -1
         self.wave = 0
         self.kills = 0
+        self.wave_text_width = len(f"Wave {self.wave}")
 
         self.turret_menu_open = False
         self.buy_menu_open = False
@@ -84,7 +87,7 @@ class Game:
         self.title_text = text_font_xl.render("Tower Defence", True, (250,250,250))
         self.cost_text = text_font_m.render(" ", True, (255,255,255))
         self.notif_text = text_font_s.render(" ", True, (255,100,100))
-        self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
+        self.money_text = text_font_l.render(str(self.money)+" $", True, (150,255,150))
         self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
         self.music_credits_text = text_font_m.render("Music - Adam Haynes", True, (150,255,150))
         self.art_credits_text = text_font_m.render("Art - Kenney Vleugels & Igor Zamojski", True, (150,255,150))
@@ -92,6 +95,7 @@ class Game:
         self.game_over_text_1 = text_font_xl.render("Game Over", True, (255,255,255))
         self.game_over_text_2 = text_font_l.render("Good luck next time!", True, (155,155,155))
         self.game_over_stats = text_font_m.render(f"Kills: {self.kills}", True, (200,200,200))
+        self.wave_text = text_font_l.render(f"Wave {self.wave+1}", True, (255,255,255))
 
         self.title_text_center = self.title_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//5))
         self.cost_center = self.cost_text.get_rect(center=(self.resolution[0]//2+self.parallax_move[0], self.COST_Y+self.parallax_move[1]))
@@ -124,7 +128,7 @@ class Game:
             self.parallax_mod = settings['parallax_mod']
 
         for key in self.sfx:
-            self.sfx[key].set_volume(self.sfx_volume)
+            self.sfx[key].set_volume(self.sfx_volume*self.VOLUME_MOD)
 
     def playIntro(self):
         """
@@ -210,8 +214,7 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    pos = pygame.mouse.get_pos()
-
+                    self.active_animations.append(animations.circleAnimation([randint(60,100),randint(60,100),randint(60,100)], pos, 1, 1, substract=2))
                     if self.main_menu_buttons[0].isOver(pos): # new game
                         self.sfx['menu_nav'].play()
                         self.loadMusic("level.mp3", self.music_volume)
@@ -261,14 +264,16 @@ class Game:
                     self.run = False
 
                 if event.type == pygame.MOUSEMOTION:
-                    self.setParallax()
 
+                    self.setParallax()
                     if self.try_again_button.isOver(pos):
                         self.try_again_button.color = self.try_again_button.clicked_color
                     else:
                         self.try_again_button.color = self.try_again_button.default_color
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
+
+                    self.active_animations.append(animations.circleAnimation([randint(60,100),randint(60,100),randint(60,100)], pos, 1, 1, substract=2))
                     if self.try_again_button.isOver(pos):
                         self.sfx['menu_nav'].play()
                         show_game_over = False
@@ -306,12 +311,10 @@ class Game:
 
         while self.run and self.game_run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
-
             pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-
                     self.run = False
 
                 if event.type == pygame.MOUSEMOTION:
@@ -326,6 +329,7 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
+                    self.active_animations.append(animations.circleAnimation([randint(60,100),randint(60,100),randint(60,100)], pos, 1, 1, substract=2))
                     self.selected_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
 
                     if self.buy_menu_open:
@@ -339,21 +343,27 @@ class Game:
                         buyMenu.activate(self)
 
             # sending enemies -------------------------------------------------------- #
-            if self.enemy_send_timer > 0:
+            if self.enemy_send_timer > 0: # countdown
                 self.enemy_send_timer -= 1
-            else:
+            else: # sending enemy
                 self.enemies.append(eval(f"objects.{self.waves[self.wave][self.enemy_type_index][0]}(self.levels[self.level][0])"))
                 self.enemy_send_index += 1
                 self.enemy_send_timer = self.waves[self.wave][self.enemy_type_index][2]
 
+                if self.enemy_send_index == 1 and self.enemy_type_index == 0: # editing 'wave' text
+                    self.wave_text = text_font_l.render(f"Wave {self.wave+1}", True, (255,255,255))
+                    self.wave_text_width = len(f"Wave {self.wave}")
+                    animation_center = list(map(round, (self.resolution[0]-30-16*self.wave_text_width+self.parallax_move[0]/5, 55+self.parallax_move[1]/5)))
+                    self.active_animations.append(animations.circleAnimation([200,200,200], animation_center))
+
                 if self.enemy_send_index >= self.waves[self.wave][self.enemy_type_index][1]:
                     if len(self.waves[self.wave])-1 <= self.enemy_type_index:
-                        if self.wave != len(self.waves)-1:
+                        if self.wave != len(self.waves)-1: # new wave
                             self.wave += 1
                             self.enemy_send_timer = 300
                             self.enemy_send_index = 0
                             self.enemy_type_index = 0
-                        else:
+                        else: # no more waves
                             print('Game Finished - No more waves left')
 
                     else:
@@ -385,7 +395,7 @@ class Game:
         :returns: None
         """
         pygame.mixer.music.load(f"{path}{name}")
-        pygame.mixer.music.set_volume(volume)
+        pygame.mixer.music.set_volume(volume*self.VOLUME_MOD)
 
         if looped:
             pygame.mixer.music.play(-1)
@@ -410,6 +420,8 @@ class Game:
         self.turrets = []
         self.turret_pos = []
         self.killed_enemies = []
+        self.wave_text = text_font_l.render(f"Wave {self.wave+1}", True, (255,255,255))
+        self.wave_text_width = len(f"Wave {self.wave}")
         self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
         self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
 
@@ -509,14 +521,18 @@ class Game:
                 self.backgrounds.append([self.bg, [-self.resolution[0], -50]])
                 self.backgrounds.remove(bg)
 
+        for anim in self.active_animations:
+            anim.draw(self.Screen)
+            if anim.radius > self.resolution[0]*1.5:
+                self.active_animations.remove(anim)
+
     def drawMenu(self):
         self.drawBg()
+        self.drawBoard()
 
         self.Screen.blit(self.title_text, self.title_text_center)
         for button in self.main_menu_buttons:
             button.draw(self.Screen)
-
-        self.drawBoard()
 
         pygame.display.update()
 
@@ -581,6 +597,7 @@ class Game:
 
         self.Screen.blit(self.money_text, (30+self.parallax_move[0]/5,20+self.parallax_move[1]/5))
         self.Screen.blit(self.health_text, (30+self.parallax_move[0]/5,80+self.parallax_move[1]/5))
+        self.Screen.blit(self.wave_text, (self.resolution[0]-30-32*self.wave_text_width+self.parallax_move[0]/5, 20+self.parallax_move[1]/5))
         if self.hovered_tile in self.tiles and not self.buy_menu_open and not self.turret_menu_open:
             self.Screen.blit(self.indicator, self.hovered_tile)
 

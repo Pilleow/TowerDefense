@@ -165,7 +165,7 @@ def audio_settings(self):
         json.dump(settings, f, indent=4)
 
     for key in self.sfx:
-        self.sfx[key].set_volume(self.sfx_volume)
+        self.sfx[key].set_volume(self.sfx_volume*self.VOLUME_MOD)
 
 def slider(self, mouse_pos, type_, mouse_left_holding, pos_res, color=[250,250,250]):
     """
@@ -186,7 +186,7 @@ def slider(self, mouse_pos, type_, mouse_left_holding, pos_res, color=[250,250,2
 
             if type_ == 'music':
                 self.music_volume = (mouse_pos[0] - pos_res[0])/pos_res[2]
-                pygame.mixer.music.set_volume(self.music_volume)
+                pygame.mixer.music.set_volume(self.music_volume*self.VOLUME_MOD)
             elif type_ == 'sfx':
                 self.sfx_volume = (mouse_pos[0] - pos_res[0])/pos_res[2]
             elif type_ == 'parallax':
