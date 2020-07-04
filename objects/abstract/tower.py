@@ -1,10 +1,14 @@
 import pygame
 import math
+
 pygame.init()
+pygame.mixer.quit()
+pygame.mixer.pre_init(44100, -16, 2, 512)
+pygame.mixer.init()
+
 Screen = pygame.display.set_mode((800,600))
 
 turret_imgs = [pygame.image.load(f"sprites/towers/head/level_{x}.png").convert_alpha() for x in range(1,5)]
-
 
 class Tower:
     def __init__(self, pos, dmg, cost, base_sprite, level, range_, shoot_cooldown, beam_thickness):

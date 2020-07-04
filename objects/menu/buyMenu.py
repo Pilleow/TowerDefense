@@ -1,4 +1,5 @@
 import pygame
+from random import randint
 
 pygame.init()
 pygame.mixer.quit()
@@ -56,6 +57,7 @@ def operate(self):
                 self.cost_text = text_font_m.render(" ", True, (255,255,255))
                 self.notif_text = text_font_s.render(" ", True, (100,255,100))
                 self.turret_string = f"objects.{tr.__class__.__name__}({pos}, True)"
+                self.sfx[f"shop_{randint(0,2)}"].play()
                 return True
             return False
 

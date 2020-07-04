@@ -1,4 +1,5 @@
 import pygame
+from random import randint
 
 pygame.init()
 pygame.mixer.quit()
@@ -59,6 +60,7 @@ def operate(self):
                 self.turret_pos.remove(self.selected_turret.pos)
                 self.selected_turret.show_range = False
                 self.turret_menu_open = False
+                self.sfx[f"shop_{randint(0,2)}"].play()
 
             elif btn[0] == 'upgrade':
                 if self.money >= self.selected_turret.cost*0.5:
@@ -70,6 +72,7 @@ def operate(self):
                             continue
 
                         self.money -= round(prev_cost*0.5)
+                        self.sfx[f"shop_{randint(0,2)}"].play()
                         self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
 
                         self.cost_text = text_font_m.render(str(round(self.selected_turret.cost * 0.5))+" $", True, (255,255,255))
