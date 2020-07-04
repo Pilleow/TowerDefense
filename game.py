@@ -43,8 +43,20 @@ class Game:
         self.turret_menu_buttons = [ [x, [-50,-100], pygame.transform.scale(pygame.image.load(f"sprites/buttons/turretMenu/{x}.png"),(40,40))] for x in ['sell','upgrade'] ]
 
         self.sfx = {
-            "menu_nav": pygame.mixer.Sound("media/sfx/menu_nav.wav")
+            "menu_nav": pygame.mixer.Sound("media/sfx/menu/menu_nav.wav"),
+            "game_over": pygame.mixer.Sound("media/sfx/menu/game_over.wav")
         }
+
+        # loading multiple instances of sfx
+        for index in range(0,3):
+            self.sfx[f"shoot_{index}"] = pygame.mixer.Sound(f"media/sfx/shoot/shoot_{index+1}.wav")
+
+        for index in range(0,4):
+            for i in range(1,3):
+                self.sfx[f"explode_{index}_{i}"] = pygame.mixer.Sound(f"media/sfx/explode/explode_{index+1}_{i}.wav")
+
+        for index in range(0,3):
+            self.sfx[f"shop_{index}"] = pygame.mixer.Sound(f"media/sfx/menu/buy_{index+1}.wav")
 
         self.FPS = 90
         self.NOTIF_Y = 100
@@ -201,7 +213,6 @@ class Game:
                     pos = pygame.mouse.get_pos()
 
                     if self.main_menu_buttons[0].isOver(pos): # new game
-                        self.main_menu_buttons[0].color = self.main_menu_buttons[0].default_color
                         self.sfx['menu_nav'].play()
                         self.loadMusic("level.mp3", self.music_volume)
                         self.gameRun()
@@ -234,9 +245,12 @@ class Game:
         Main loop, runs when credits are selected in mainMenu
         :returns: None
         """
+
+        self.main_menu_buttons[0].color = self.main_menu_buttons[0].default_color
         self.game_over_stats = text_font_m.render(f"Kills: {self.kills}", True, (200,200,200))
         self.level = -1
         pygame.mixer.music.stop()
+        self.sfx['game_over'].play()
         show_game_over = True
         while show_game_over and self.run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
@@ -261,6 +275,7 @@ class Game:
 
             self.drawGameOver()
 
+        self.loadMusic("main_menu.mp3", self.music_volume)
         self.loadLevel()
 
     def showCredits(self):
@@ -291,7 +306,6 @@ class Game:
 
         while self.run and self.game_run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
-            print(self.clock.get_fps())
 
             pos = pygame.mouse.get_pos()
 
@@ -416,8 +430,10 @@ class Game:
                 tr.shoot_cooldown -= 1
             for en in self.enemies:
                 if tr.attackTarget(en):
+                    self.sfx[f"shoot_{tr.id}"].play()
                     break
                 if en.health <= 0:
+                    self.sfx[f"explode_{en.id}_{randint(1,2)}"].play()
                     self.money += en.value
                     self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
                     self.killed_enemies.append(en)
@@ -457,7 +473,6 @@ class Game:
         for en in self.killed_enemies: # explosions
             en.explode_2(self.Screen)
             if en.exploded_2_radius > self.resolution[0]:
-                print(True)
                 self.killed_enemies.remove(en)
 
         for p in self.levels[self.level]:
