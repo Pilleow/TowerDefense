@@ -24,14 +24,14 @@ def settings_active(self):
 
     while settings_main_open and self.run: # mainloop ---------------------------------------------------------------- #
         self.clock.tick(self.FPS)
+        pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.run = False
 
             if event.type == pygame.MOUSEMOTION:
-                pos = pygame.mouse.get_pos()
-                self.setParallax(pos)
+                self.setParallax()
 
                 for button in self.settings_buttons:
                     if button.isOver(pos):
@@ -83,7 +83,7 @@ def video_settings(self):
                 self.run = False
 
             if event.type == pygame.MOUSEMOTION:
-                self.setParallax(pos)
+                self.setParallax()
 
                 for button in self.settings_buttons:
                     if button.isOver(pos):
@@ -135,7 +135,7 @@ def audio_settings(self):
                 self.run = False
 
             if event.type == pygame.MOUSEMOTION:
-                self.setParallax(pos)
+                self.setParallax()
 
                 for button in self.settings_buttons:
                     if button.isOver(pos):

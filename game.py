@@ -1,6 +1,6 @@
 import objects.objects as objects
 from objects.menu import buyMenu, turretMenu, settingsMenu
-from random import choice
+from random import choice, randint
 import json, math
 import pygame
 
@@ -22,17 +22,18 @@ class Game:
         self.resolution = (1000,700)
         self.clock = pygame.time.Clock()
         self.Screen = pygame.display.set_mode(self.resolution)
-        self.ScreenAlpha = pygame.display.set_mode(self.resolution)
 
         self.indicator = pygame.image.load('sprites/other/indicator.png').convert_alpha()
 
         self.tiles = []
+        self.killed_enemies = []
         self.enemies = []
         self.turrets = []
         self.turret_pos = []
         self.parallax_move = [0,0]
         self.buy_menu_pos = [-50,-100]
         self.turret_menu_pos = [-50,-100]
+        self.hue = choice([[255,0,0],[0,255,0],[0,0,255]])
         self.hovered_tile = self.resolution
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1,4)]
         self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1,4)]
@@ -65,6 +66,7 @@ class Game:
         self.turret_menu_open = False
         self.buy_menu_open = False
         self.intro_playing = True
+        self.intro_menu_t_played = False
         self.run = True
 
         self.title_text = text_font_xl.render("Tower Defence", True, (250,250,250))
@@ -179,6 +181,7 @@ class Game:
 
         while self.run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
+            pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -186,9 +189,7 @@ class Game:
 
                 if event.type == pygame.MOUSEMOTION:
 
-                    pos = pygame.mouse.get_pos()
-
-                    self.setParallax(pos)
+                    self.setParallax()
                     for button in self.main_menu_buttons:
                         if button.isOver(pos):
                             button.color = button.clicked_color
@@ -246,7 +247,7 @@ class Game:
                     self.run = False
 
                 if event.type == pygame.MOUSEMOTION:
-                    self.setParallax(pos)
+                    self.setParallax()
 
                     if self.try_again_button.isOver(pos):
                         self.try_again_button.color = self.try_again_button.clicked_color
@@ -276,8 +277,7 @@ class Game:
                     show_credits = False
 
                 if event.type == pygame.MOUSEMOTION:
-                    pos = pygame.mouse.get_pos()
-                    self.setParallax(pos)
+                    self.setParallax()
 
             self.drawCredits()
 
@@ -291,6 +291,9 @@ class Game:
 
         while self.run and self.game_run: # mainloop ---------------------------------------------------------------- #
             self.clock.tick(self.FPS)
+            print(self.clock.get_fps())
+
+            pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -299,10 +302,9 @@ class Game:
 
                 if event.type == pygame.MOUSEMOTION:
 
-                    pos = pygame.mouse.get_pos()
                     self.hovered_tile = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
 
-                    self.setParallax(pos)
+                    self.setParallax()
                     if self.buy_menu_open:
                         buyMenu.hover(self)
                     elif self.turret_menu_open:
@@ -353,12 +355,13 @@ class Game:
 
         self.gameOver()
 
-    def setParallax(self, pos):
+    def setParallax(self):
         """
         Sets the parallax relative to mouse position
         :params pos: mouse position
         :returns: None
         """
+        pos = pygame.mouse.get_pos()
         if self.parallax_mod > 0.02:
             self.parallax_move = [((self.resolution[0]//2-pos[0])/20)*self.parallax_mod, ((self.resolution[1]//2-pos[1])/15)*self.parallax_mod]
 
@@ -391,6 +394,8 @@ class Game:
         self.enemies = []
         self.tiles = []
         self.turrets = []
+        self.turret_pos = []
+        self.killed_enemies = []
         self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
         self.health_text = text_font_l.render(str(self.health), True, (255,150,150))
 
@@ -415,8 +420,10 @@ class Game:
                 if en.health <= 0:
                     self.money += en.value
                     self.money_text = text_font_l.render(str(self.money)+" $", True, (255,255,255))
+                    self.killed_enemies.append(en)
                     self.enemies.remove(en)
                     self.kills += 1
+                    self.setParallax()
 
     def moveEnemy(self,en):
         """
@@ -446,6 +453,13 @@ class Game:
                     self.game_run = False
 
     def drawBoard(self):
+
+        for en in self.killed_enemies: # explosions
+            en.explode_2(self.Screen)
+            if en.exploded_2_radius > self.resolution[0]:
+                print(True)
+                self.killed_enemies.remove(en)
+
         for p in self.levels[self.level]:
             if self.levels[self.level].index(p) == 0:
                 self.Screen.blit(self.tile_sprites[3], (p[0], p[1], 50, 50))
@@ -461,6 +475,9 @@ class Game:
             en.draw(self.Screen)
         for tr in self.turrets:
             tr.draw(self.Screen)
+
+        for en in self.killed_enemies: # explosions
+            en.explode_1(self.Screen)
 
     def drawBg(self):
         """
@@ -553,6 +570,7 @@ class Game:
             self.Screen.blit(self.indicator, self.hovered_tile)
 
         pygame.display.update()
+
 
 g = Game()
 g.playIntro()
