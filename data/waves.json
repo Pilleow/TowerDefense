@@ -7,10 +7,16 @@
     [["Circle_2", 5, 40], ["Square_1", 5, 60], ["Circle_2", 5, 40], ["Square_1", 5, 60], ["Circle_2", 5, 40]],
     [["Circle_2", 5, 30], ["Square_1", 10, 50], ["Circle_2", 5, 30], ["Square_1", 5, 50]],
     [["Circle_2", 10, 20], ["Square_1", 15, 45]],
+    [["Circle_2", 5, 15], ["Square_1", 5, 30], ["Circle_2", 5, 15], ["Square_1", 5, 25], ["Circle_2", 5, 15]],
     [["Circle_2", 50, 10]],
     [["Square_1", 5, 40], ["Square_2", 5, 60], ["Square_1", 5, 40], ["Square_2", 5, 60], ["Square_1", 5, 40]],
     [["Square_1", 5, 30], ["Square_2", 10, 50], ["Square_1", 5, 30], ["Square_1", 5, 40]],
     [["Square_1", 10, 20], ["Square_2", 15, 30]],
+    [["Square_1", 5, 15], ["Square_2", 5, 25], ["Square_1", 5, 15], ["Square_2", 5, 20], ["Square_1", 5, 15]],
     [["Square_1", 50, 10]],
-    [["Square_2", 1, 0]]
+    [["Square_1", 5, 20], ["Square_2", 5, 30], ["Square_1", 5, 20], ["Square_2", 5, 30], ["Square_1", 5, 20]],
+    [["Square_1", 5, 15], ["Square_2", 10, 25], ["Square_1", 5, 15], ["Square_1", 5, 20]],
+    [["Square_2", 25, 15]],
+    [["Square_1", 5, 5], ["Square_2", 15, 15], ["Square_1", 5, 5]],
+    [["Square_2", 50, 5]]
 ]

@@ -12,9 +12,13 @@ Screen = pygame.display.set_mode((800,600))
 turret_imgs = [pygame.image.load(f"sprites/towers/head/level_{x}.png").convert_alpha() for x in range(1,5)]
 
 class Tower:
-    def __init__(self, pos, dmg, cost, base_sprite, level, range_, shoot_cooldown, beam_thickness):
-        self.pos = pos
+    def __init__(self, pos, dmg, cost, base_sprite, level, range_, shoot_cooldown, beam_thickness, active):
+        if active:
+            self.info_range = range_
+        else:
+            self.info_range = 0
         self.range_ = range_
+        self.pos = pos
         self.dmg = dmg
         self.cost = cost
         self.level = level
@@ -40,7 +44,7 @@ class Tower:
         self.level += 1
         self.turret_sprite = turret_imgs[self.level]
         self.dmg += 1
-        self.shoot_cooldown_default -= 1 * self.shoot_cooldown_default/10 - 1
+        self.shoot_cooldown_default -= 1 * round(self.shoot_cooldown_default/10) - 1
         self.range_ += 15
         self.cost += round(self.cost*0.5)
         return True
@@ -53,7 +57,7 @@ class Tower:
         """
         distance = math.hypot(self.x - enemy.x, self.y - enemy.y)
         if distance <= self.range_ and self.shoot_cooldown <= 0:
-            self.shoot_cooldown = self.shoot_cooldown_default
+            self.shoot_cooldown = randint(self.shoot_cooldown_default-2, self.shoot_cooldown_default+2)
             enemy.health -= self.dmg
             self.target = (round(enemy.x+enemy.x_offset), round(enemy.y+enemy.y_offset))
             self.beam_drawtime = 7

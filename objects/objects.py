@@ -43,35 +43,23 @@ class Square_2(Enemy):
 # Turrets --------------------------------------------------------------------------- #
 class Kinetic_1(Tower):
     def __init__(self, pos, active, level=0):
-        if active:
-            range_ = 125
-        else:
-            range_ = 0
         self.description = "Easily affordable"
         self.id = 0
-        super().__init__(pos, 5, 250, base_imgs[0], level, range_, 60, 1)
+        super().__init__(pos, 5, 250, base_imgs[0], level, 125, 60, 1, active)
 
 
 class Kinetic_2(Tower):
     def __init__(self, pos, active, level=0):
-        if active:
-            range_ = 150
-        else:
-            range_ = 0
         self.description = "Fast shooting"
         self.id = 1
-        super().__init__(pos, 0.5, 500, base_imgs[1], level, range_, 15, 0.5)
+        super().__init__(pos, 0.5, 500, base_imgs[1], level, 150, 15, 0.5, active)
 
 
 class Kinetic_3(Tower):
     def __init__(self, pos, active, level=0):
-        if active:
-            range_ = 175
-        else:
-            range_ = 0
         self.description = "Heavy artillery"
         self.id = 2
-        super().__init__(pos, 15, 1000, base_imgs[2], level, range_, 90, 1.5)
+        super().__init__(pos, 15, 1000, base_imgs[2], level, 175, 90, 1.5, active)
 
 
 # Buttons --------------------------------------------------------------------------- #
@@ -108,3 +96,13 @@ class backSettingsButton(Button):
 class tryAgainButton(Button):
     def __init__(self, pos_res):
         super().__init__([75,75,75], pos_res, "Main Menu", [255,255,255], 90)
+
+
+class resumeButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([75,150,75], pos_res, "Resume", [255,255,255], 90)
+
+
+class menuButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([150,75,75], pos_res, "Surrender", [255,255,255], 90)

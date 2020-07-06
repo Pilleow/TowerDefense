@@ -1,4 +1,4 @@
-from obj.button import Button
+from objects.abstract.button import Button
 import pygame
 import math
 import json
@@ -102,9 +102,10 @@ class Editor():
         x_offset = self.resolution[0]//2 - x_center
         y_offset = self.resolution[1]//2 - y_center
 
-        if x_offset % 2:
-            x_offset -= 25
-        if y_offset % 2:
+
+        if x_offset % 2 != 0:
+            x_offset += 25
+        if y_offset % 2 != 0:
             y_offset += 25
 
         for square in self.path:
@@ -113,6 +114,7 @@ class Editor():
 
         print(x_offset)
         print(y_offset)
+        print(self.path[0])
 
         # saving path
         with open("data/levels.json") as f:
