@@ -88,7 +88,7 @@ class videoSettingsButton(Button):
         super().__init__([75,75,75], pos_res, "Video Settings", [255,255,255], 110)
 
 
-class backSettingsButton(Button):
+class backButton(Button):
     def __init__(self, pos_res):
         super().__init__([75,75,75], pos_res, "Back", [255,255,255], 90)
 
@@ -106,3 +106,8 @@ class resumeButton(Button):
 class menuButton(Button):
     def __init__(self, pos_res):
         super().__init__([150,75,75], pos_res, "Surrender", [255,255,255], 90)
+
+
+class playLevelButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([75,150,75], pos_res, "Launch!", [255,255,255], 90)

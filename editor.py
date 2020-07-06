@@ -9,12 +9,12 @@ text_font = pygame.font.SysFont('Consolas', 50)
 
 class Editor():
     def __init__(self):
-        self.resolution = (1000,700)
-        self.Screen = pygame.display.set_mode(self.resolution)
+        self.res = (1000,700)
+        self.Screen = pygame.display.set_mode(self.res)
         self.clock = pygame.time.Clock()
-        self.buttons = [Button([50,200,50], (self.resolution[0]//1.4, self.resolution[1]//1.2, 200, 60), "Save", [0,0,0], 40)] # color, pos_res, text, text_color, font, antialias=True
+        self.buttons = [Button([50,200,50], (self.res[0]//1.4, self.res[1]//1.2, 200, 60), "Save", [0,0,0], 40)] # color, pos_res, text, text_color, font, antialias=True
         self.path_saved_text = text_font.render("Level saved to data/levels.json", True, (255,255,255))
-        self.path_saved_text_center = self.path_saved_text.get_rect(center=(self.resolution[0]//2, self.resolution[1]//15))
+        self.path_saved_text_center = self.path_saved_text.get_rect(center=(self.res[0]//2, self.res[1]//15))
         self.path_saved_text_timeout = 0
         self.path = []
         self.path_saved = False
@@ -99,8 +99,8 @@ class Editor():
 
         x_center = (x_max+x_min)//2
         y_center = (y_max+y_min)//2
-        x_offset = self.resolution[0]//2 - x_center
-        y_offset = self.resolution[1]//2 - y_center
+        x_offset = self.res[0]//2 - x_center
+        y_offset = self.res[1]//2 - y_center
 
 
         if x_offset % 2 != 0:

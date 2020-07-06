@@ -20,7 +20,7 @@ def settings_active(self):
 
     settings_main_open = True
 
-    self.main_title_center = self.main_title.get_rect(center=(self.resolution[0]/2, self.resolution[1]/5.7))
+    self.main_title_center = self.main_title.get_rect(center=(self.res[0]/2, self.res[1]/5.7))
 
     while settings_main_open and self.run: # mainloop ---------------------------------------------------------------- #
         self.clock.tick(self.FPS)
@@ -71,8 +71,8 @@ def video_settings(self):
     mouse_left_holding = False
     settings_video_open = True
 
-    self.video_title_center = self.video_title.get_rect(center=(self.resolution[0]/2, self.resolution[1]/5))
-    self.parallax_warning_center = self.parallax_warning.get_rect(center=(self.resolution[0]/2, self.resolution[1]/1.5))
+    self.video_title_center = self.video_title.get_rect(center=(self.res[0]/2, self.res[1]/5))
+    self.parallax_warning_center = self.parallax_warning.get_rect(center=(self.res[0]/2, self.res[1]/1.5))
 
     while settings_video_open and self.run: # mainloop ---------------------------------------------------------------- #
         self.clock.tick(self.FPS)
@@ -120,7 +120,7 @@ def audio_settings(self):
     self.music_vol_text = text_font_m.render("Music Volume", True, (250,250,250))
     self.sfx_vol_text = text_font_m.render("SFX Volume", True, (250,250,250))
 
-    self.audio_title_center = self.audio_title.get_rect(center=(self.resolution[0]/2, self.resolution[1]/5))
+    self.audio_title_center = self.audio_title.get_rect(center=(self.res[0]/2, self.res[1]/5))
 
     mouse_left_holding = False
     settings_audio_open = True
@@ -220,11 +220,11 @@ def draw_audio_settings(self, mouse_pos, mouse_left_holding):
     self.drawBg()
     self.Screen.blit(self.audio_title, self.audio_title_center)
 
-    self.Screen.blit(self.music_vol_text, [ self.resolution[0]/2-400, self.resolution[1]/2 - 150 ]) # music volume
-    slider(self, mouse_pos, 'music', mouse_left_holding, [ self.resolution[0]/2-400, self.resolution[1]/2-75, 800, 50 ])
+    self.Screen.blit(self.music_vol_text, [ self.res[0]/2-400, self.res[1]/2 - 150 ]) # music volume
+    slider(self, mouse_pos, 'music', mouse_left_holding, [ self.res[0]/2-400, self.res[1]/2-75, 800, 50 ])
 
-    self.Screen.blit(self.sfx_vol_text, [ self.resolution[0]/2-400, self.resolution[1]/2 ]) # sfx volume
-    slider(self, mouse_pos, 'sfx', mouse_left_holding, [ self.resolution[0]/2-400, self.resolution[1]/2+75, 800, 50 ])
+    self.Screen.blit(self.sfx_vol_text, [ self.res[0]/2-400, self.res[1]/2 ]) # sfx volume
+    slider(self, mouse_pos, 'sfx', mouse_left_holding, [ self.res[0]/2-400, self.res[1]/2+75, 800, 50 ])
 
     self.settings_buttons[2].draw(self.Screen)
 
@@ -238,8 +238,8 @@ def draw_video_settings(self, mouse_pos, mouse_left_holding):
     self.drawBg()
     self.Screen.blit(self.video_title, self.video_title_center)
 
-    self.Screen.blit(self.parallax_text, [ self.resolution[0]/2-400, self.resolution[1]/2 - 150 ])
-    slider(self, mouse_pos, 'parallax', mouse_left_holding, [ self.resolution[0]/2-400, self.resolution[1]/2-75, 800, 50 ])
+    self.Screen.blit(self.parallax_text, [ self.res[0]/2-400, self.res[1]/2 - 150 ])
+    slider(self, mouse_pos, 'parallax', mouse_left_holding, [ self.res[0]/2-400, self.res[1]/2-75, 800, 50 ])
 
     if self.parallax_mod > 0.75:
         self.Screen.blit(self.parallax_warning, self.parallax_warning_center)
