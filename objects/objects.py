@@ -4,16 +4,17 @@ from objects.abstract.button import Button
 import pygame
 
 pygame.init()
-Screen = pygame.display.set_mode((800,600))
+Screen = pygame.display.set_mode((800, 600))
 
 enemy_imgs = [
-    pygame.transform.scale(pygame.image.load("sprites/enemies/circle_1.png").convert_alpha(), (20,20)),
-    pygame.transform.scale(pygame.image.load("sprites/enemies/circle_2.png").convert_alpha(), (25,25)),
-    pygame.transform.scale(pygame.image.load("sprites/enemies/square_1.png").convert_alpha(), (30,30)),
-    pygame.transform.scale(pygame.image.load("sprites/enemies/square_2.png").convert_alpha(), (40,40)),
+    pygame.transform.scale(pygame.image.load("sprites/enemies/circle_1.png").convert_alpha(), (20, 20)),
+    pygame.transform.scale(pygame.image.load("sprites/enemies/circle_2.png").convert_alpha(), (25, 25)),
+    pygame.transform.scale(pygame.image.load("sprites/enemies/square_1.png").convert_alpha(), (30, 30)),
+    pygame.transform.scale(pygame.image.load("sprites/enemies/square_2.png").convert_alpha(), (40, 40)),
 ]
 
-base_imgs = [pygame.image.load(f"sprites/towers/base/base_{x}.png") for x in range(1,4)]
+base_imgs = [pygame.image.load(f"sprites/towers/base/base_{x}.png") for x in range(1, 4)]
+
 
 # Enemies --------------------------------------------------------------------------- #
 class Circle_1(Enemy):
@@ -65,49 +66,59 @@ class Kinetic_3(Tower):
 # Buttons --------------------------------------------------------------------------- #
 class newGameButton(Button):
     def __init__(self, pos_res):
-        super().__init__([50,125,50], pos_res, "New Game", [255,255,255], 90)
+        super().__init__([50, 125, 50], pos_res, "New Game", [255, 255, 255], 90)
 
 
 class creditsButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Credits", [255,255,255], 90)
+        super().__init__([75, 75, 75], pos_res, "Credits", [255, 255, 255], 90)
 
 
 class settingsButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Settings", [255,255,255], 90)
+        super().__init__([75, 75, 75], pos_res, "Settings", [255, 255, 255], 90)
 
 
 class audioSettingsButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Audio Settings", [255,255,255], 110)
+        super().__init__([75, 75, 75], pos_res, "Audio Settings", [255, 255, 255], 110)
 
 
 class videoSettingsButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Video Settings", [255,255,255], 110)
+        super().__init__([75, 75, 75], pos_res, "Video Settings", [255, 255, 255], 110)
 
 
 class backButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Back", [255,255,255], 90)
+        super().__init__([75, 75, 75], pos_res, "Back", [255, 255, 255], 90)
 
 
 class tryAgainButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,75,75], pos_res, "Main Menu", [255,255,255], 90)
+        super().__init__([75, 75, 75], pos_res, "Main Menu", [255, 255, 255], 90)
 
 
 class resumeButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,150,75], pos_res, "Resume", [255,255,255], 90)
+        super().__init__([75, 150, 75], pos_res, "Resume", [255, 255, 255], 90)
 
 
 class menuButton(Button):
     def __init__(self, pos_res):
-        super().__init__([150,75,75], pos_res, "Surrender", [255,255,255], 90)
+        super().__init__([150, 75, 75], pos_res, "Surrender", [255, 255, 255], 90)
 
 
 class playLevelButton(Button):
     def __init__(self, pos_res):
-        super().__init__([75,150,75], pos_res, "Launch!", [255,255,255], 90)
+        super().__init__([75, 150, 75], pos_res, "Launch!", [255, 255, 255], 90)
+
+
+class nextLevelButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([75, 75, 100], pos_res, "Next", [255, 255, 255], 90)
+
+
+class prevLevelButton(Button):
+    def __init__(self, pos_res):
+        super().__init__([75, 75, 100], pos_res, "Prev", [255, 255, 255], 90)

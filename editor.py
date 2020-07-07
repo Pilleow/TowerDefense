@@ -7,23 +7,25 @@ pygame.init()
 
 text_font = pygame.font.SysFont('Consolas', 50)
 
-class Editor():
+
+class Editor:
     def __init__(self):
-        self.res = (1000,700)
+        self.res = (1000, 700)
         self.Screen = pygame.display.set_mode(self.res)
         self.clock = pygame.time.Clock()
-        self.buttons = [Button([50,200,50], (self.res[0]//1.4, self.res[1]//1.2, 200, 60), "Save", [0,0,0], 40)] # color, pos_res, text, text_color, font, antialias=True
-        self.path_saved_text = text_font.render("Level saved to data/levels.json", True, (255,255,255))
-        self.path_saved_text_center = self.path_saved_text.get_rect(center=(self.res[0]//2, self.res[1]//15))
+        self.buttons = [Button([50, 200, 50], (self.res[0] // 1.4, self.res[1] // 1.2, 200, 60), "Save", [0, 0, 0],
+                               40)]  # color, pos_res, text, text_color, font, antialias=True
+        self.path_saved_text = text_font.render("Level saved to data/levels.json", True, (255, 255, 255))
+        self.path_saved_text_center = self.path_saved_text.get_rect(center=(self.res[0] // 2, self.res[1] // 15))
         self.path_saved_text_timeout = 0
         self.path = []
         self.path_saved = False
+        self.FPS = 60
 
     def run(self):
         run = True
-        FPS = 60
         while run:
-            self.clock.tick(FPS)
+            self.clock.tick(self.FPS)
 
             if self.path_saved_text_timeout == 0:
                 self.path_saved = False
@@ -36,11 +38,11 @@ class Editor():
                 if event.type == pygame.QUIT:
                     run = False
 
-                if event.type == pygame.MOUSEBUTTONDOWN: # left click = 1; right click = 3
+                if event.type == pygame.MOUSEBUTTONDOWN:  # left click = 1; right click = 3
                     if self.buttons[0].isOver(pos):
-                        self.savePath()
+                        self.save_path()
                     else:
-                        self.modifyPath(pos)
+                        self.modify_path(pos)
 
                 if event.type == pygame.MOUSEMOTION:
                     if self.buttons[0].isOver(pos):
@@ -49,8 +51,8 @@ class Editor():
                         self.buttons[0].color = self.buttons[0].default_color
             self.draw()
 
-    def modifyPath(self, pos):
-        path_pos = list((math.floor(pos[0]/50)*50, math.floor(pos[1]/50)*50))
+    def modify_path(self, pos):
+        path_pos = list((math.floor(pos[0] / 50) * 50, math.floor(pos[1] / 50) * 50))
         if path_pos not in self.path:
             self.path.append(path_pos)
         elif path_pos in self.path:
@@ -59,26 +61,26 @@ class Editor():
                     self.path.remove(p)
 
     def draw(self):
-        self.Screen.fill((0,0,0))
+        self.Screen.fill((0, 0, 0))
 
         for p in self.path:
             if self.path.index(p) == 0:
-                pygame.draw.rect(self.Screen, (200,100,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (250,150,150), (p[0]+5, p[1]+5, 40, 40))
+                pygame.draw.rect(self.Screen, (200, 100, 100), (p[0], p[1], 50, 50))
+                pygame.draw.rect(self.Screen, (250, 150, 150), (p[0] + 5, p[1] + 5, 40, 40))
             else:
-                pygame.draw.rect(self.Screen, (100,100,100), (p[0], p[1], 50, 50))
-                pygame.draw.rect(self.Screen, (150,150,150), (p[0]+5, p[1]+5, 40, 40))
+                pygame.draw.rect(self.Screen, (100, 100, 100), (p[0], p[1], 50, 50))
+                pygame.draw.rect(self.Screen, (150, 150, 150), (p[0] + 5, p[1] + 5, 40, 40))
 
         for b in self.buttons:
             b.draw(self.Screen)
 
-        if self.path_saved == True:
+        if self.path_saved:
             self.Screen.blit(self.path_saved_text, self.path_saved_text_center)
             self.path_saved_text_timeout -= 1
 
         pygame.display.update()
 
-    def savePath(self):
+    def save_path(self):
         # centering the path
 
         x_min = self.path[0][0]
@@ -97,11 +99,10 @@ class Editor():
             elif square[1] > y_max:
                 y_max = square[1]
 
-        x_center = (x_max+x_min)//2
-        y_center = (y_max+y_min)//2
-        x_offset = self.res[0]//2 - x_center
-        y_offset = self.res[1]//2 - y_center
-
+        x_center = (x_max + x_min) // 2
+        y_center = (y_max + y_min) // 2
+        x_offset = self.res[0] // 2 - x_center
+        y_offset = self.res[1] // 2 - y_center
 
         if x_offset % 2 != 0:
             x_offset += 25
@@ -123,10 +124,11 @@ class Editor():
         levels.append(self.path)
         self.path_saved = True
         self.path_saved_text_timeout = 300
-        #self.path = []
+        # self.path = []
 
         with open("data/levels.json", "w") as f:
-            json.dump(levels, f)
+            json.dump(levels, f, indent=4)
+
 
 e = Editor()
 e.run()
