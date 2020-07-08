@@ -26,9 +26,13 @@ def hover(self):
                 continue
 
             self.cost_text = text_font_l.render(str(tr.cost) + " $", True, (255, 255, 255))
-            self.tower_info_text = text_font_m.render(
-                f"Damage: {tr.dmg * 10}  Fire rate: {round(60 / tr.shoot_cooldown_default, 2)}  Range: {tr.info_range}",
-                True, (230, 230, 230))
+            if tr.type == 'attack':
+                self.tower_info_text = text_font_m.render(
+                    f"Damage: {tr.dmg * 10}  Fire rate: {round(60 / tr.shoot_cooldown_d, 2)}  Range: {tr.info_range}",
+                    True, (230, 230, 230))
+            else:
+                self.tower_info_text = text_font_m.render(tr.info, True, (230, 230, 230))
+
             if self.money >= tr.cost:
                 self.notif_text = text_font_s.render(tr.description, True, (100, 255, 100))
                 continue
@@ -65,7 +69,8 @@ def operate(self):
                 self.cost_text = text_font_l.render(" ", True, (255, 255, 255))
                 self.notif_text = text_font_s.render(" ", True, (100, 255, 100))
                 self.tower_info_text = text_font_m.render(" ", True, (230, 230, 230))
-                self.turret_string = f"objects.{tr.__class__.__name__}({pos}, True)"
+                self.selected_tr = tr.__class__.__name__
+                self.turret_string = f"objects.{self.selected_tr}({pos}, True)"
                 self.sfx[f"shop_{randint(0, 2)}"].play()
                 return True
             return False

@@ -45,6 +45,7 @@ class Game:
         self.tiles = []
         self.enemies = []
         self.turrets = []
+        self.support = []
         self.bg_beams = []
         self.turret_pos = []
         self.killed_enemies = []
@@ -56,7 +57,8 @@ class Game:
         self.turret_menu_pos = [-50, -100]
         self.hue = choice([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
         self.intro_sfx = [pygame.mixer.Sound(f"media/intro/sfx_{index}.wav") for index in range(1, 4)]
-        self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1, 4)]
+        self.available_turrets = [eval(f"objects.Kinetic_{x}([-1000, -1000], False)") for x in range(1, 4)] \
+            + [eval(f"objects.Support_{x}([-1000, -1000], False)") for x in range(1, 4)]
         self.tile_sprites = [pygame.image.load(f'sprites/path/tile_{x}.png').convert() for x in range(1, 5)]
         self.intro_frames = [pygame.image.load(f"media/intro/frame_{index}.png").convert() for index in range(1, 10)]
         self.backgrounds = [[
@@ -110,6 +112,7 @@ class Game:
 
         # STRINGS
         self.turret_string = " "
+        self.selected_tr = " "
 
         # BOOLEANS
         self.turret_menu_open = False
@@ -186,6 +189,8 @@ class Game:
         # LOGIC
         for key in self.sfx:
             self.sfx[key].set_volume(self.sfx_volume * self.VOLUME_MOD)
+        for el in self.intro_sfx:
+            el.set_volume(self.sfx_volume * self.VOLUME_MOD + 0.2)
 
     def play_intro(self):
         """
@@ -481,7 +486,17 @@ class Game:
 
                     if self.buy_menu_open:
                         if buyMenu.operate(self):
-                            self.turrets.append(eval(self.turret_string))
+                            new_tr = eval(self.turret_string)
+                            if new_tr.type == 'support':
+                                self.support.append(new_tr)
+                                self.apply_support(self.support[-1])
+                            else:
+                                for sp in self.support:
+                                    self.apply_support(sp, True)
+                                self.turrets.append(new_tr)
+                                for sp in self.support:
+                                    self.apply_support(sp)
+
                     elif self.turret_menu_open:
                         turretMenu.operate(self)
                     elif self.selected_tile in self.turret_pos:
@@ -546,7 +561,7 @@ class Game:
 
     def pause_menu(self):
         """
-        Mainloop, it's a pause menu, duh
+        Mainloop, runs when player presses ESC in game
         :returns: None
         """
         self.pause = True
@@ -589,6 +604,27 @@ class Game:
                         self.load_level()
 
             self.draw_pause()
+
+    def apply_support(self, sp, substract=False):
+        """
+        Applies effects of the latest appended support tower to towers in range
+        :params sp: support tower object
+        :params substract: boolean
+        :returns: None
+        """
+        neg = 1
+        if substract:
+            neg = -1
+
+        for tr in self.turrets:
+            distance = math.hypot(tr.x-sp.x, tr.y-sp.y)
+            if distance > sp.range_:
+                continue
+
+            tr.dmg += sp.effects['dmg'] * neg
+            tr.range_ += sp.effects['range'] * neg
+            tr.shoot_cooldown_d += sp.effects['shoot_cooldown_d'] * neg
+            print('test')
 
     def set_parallax(self):
         """
@@ -640,6 +676,7 @@ class Game:
         self.tiles = []
         self.enemies = []
         self.turrets = []
+        self.support = []
         self.turret_pos = []
         self.killed_enemies = []
         self.wave_text = text_font_m.render(
@@ -674,7 +711,7 @@ class Game:
             if tr.shoot_cooldown > 0:
                 tr.shoot_cooldown -= 1
             for en in self.enemies:
-                if tr.attackTarget(en):
+                if tr.attack_target(en):
                     self.sfx[f"shoot_{tr.id}"].play()
                     break
                 if en.health <= 0:
@@ -741,7 +778,7 @@ class Game:
 
         for en in self.enemies:
             en.draw(self.Screen)
-        for tr in self.turrets:
+        for tr in self.turrets + self.support:
             tr.draw(self.Screen)
 
         for en in self.killed_enemies:  # explosions
@@ -749,7 +786,7 @@ class Game:
 
     def draw_bg(self):
         """
-        Draws the background image sliding to the left
+        Draws the background image, generates new beams, deletes old ones
         :returns: None
         """
         self.Screen.fill((20, 20, 30))
